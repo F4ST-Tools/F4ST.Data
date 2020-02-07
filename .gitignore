@@ -3,3 +3,22 @@
 ################################################################################
 
 /.vs
+/src/.vs
+/src/F4ST.Data/bin
+/src/F4ST.Data/obj
+/src/F4ST.Data.Dapper/bin
+/src/F4ST.Data.Dapper/obj
+/src/F4ST.Data.Dapper.MySQL/bin
+/src/F4ST.Data.Dapper.MySQL/obj
+/src/F4ST.Data.Dapper.PostgreSQL/bin
+/src/F4ST.Data.Dapper.PostgreSQL/obj
+/src/F4ST.Data.Dapper.SQLite/bin
+/src/F4ST.Data.Dapper.SQLite/obj
+/src/F4ST.Data.Dapper.SQLServer/bin
+/src/F4ST.Data.Dapper.SQLServer/obj
+/src/F4ST.Data.LiteDB/bin
+/src/F4ST.Data.LiteDB/obj
+/src/F4ST.Data.RavenDB/bin
+/src/F4ST.Data.RavenDB/obj
+/src/Test/bin
+/src/Test/obj

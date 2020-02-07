@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Description>Dapper SQL Server database functionality for F4ST</Description>
+    <Product>F4ST</Product>
+    <version>1.0.0</version>
+    <Authors>https://github.com/nRafinia</Authors>
+    <Company>https://github.com/nRafinia/F4ST.Common</Company>
+    <License>https://opensource.org/licenses/AGPL-3.0</License>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageDescription>Dapper SQL Server database functionality for F4ST</PackageDescription>
+    <RepositoryUrl>https://github.com/nRafinia/F4ST.Data</RepositoryUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="F4ST.Common" Version="1.0.10" />
+    <PackageReference Include="F4ST.Data" Version="1.0.1" />
+    <PackageReference Include="F4ST.Data.Dapper" Version="1.0.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.0" />
+  </ItemGroup>
+
+
+</Project>
