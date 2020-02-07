@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using F4ST.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Raven.Client.Documents.Subscriptions;
+using Test.Data;
 using Test.Models;
 
 namespace Test.Controllers
@@ -21,8 +23,24 @@ namespace Test.Controllers
             _repository = repository;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            var count =await _repository.Count<TestEntity>();
+
+            if (count == 0)
+            {
+                var item=new TestEntity()
+                {
+                    Name = "test",
+                    Family = "test"
+                };
+
+                await _repository.Add(item);
+                await _repository.SaveChanges();
+            }
+
+            var items =await _repository.Find<TestEntity>(t => t.Name=="test");
+
             return View();
         }
 

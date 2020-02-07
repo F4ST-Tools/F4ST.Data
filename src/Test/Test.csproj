@@ -13,7 +13,4 @@
     <PackageReference Include="F4ST.Data.RavenDB" Version="1.0.1" />
   </ItemGroup>
 
-
-
-
 </Project>
