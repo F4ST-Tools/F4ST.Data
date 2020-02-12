@@ -10,9 +10,5 @@ namespace F4ST.Data.Dapper.PostgreSQL
         
         public Type GetRepository => typeof(DapperRepository);
         
-        public void Init()
-        {
-            Dapper.DapperConnection.SetDialect(Dialect.PostgreSQL);
-        }
     }
 }

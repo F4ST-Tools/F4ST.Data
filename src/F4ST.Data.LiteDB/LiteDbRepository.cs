@@ -14,8 +14,10 @@ namespace F4ST.Data.LiteDB
     {
         private readonly LiteDatabase _dbConnection;
 
-        public LiteDbRepository(ILiteDbConnection connection)
+        public LiteDbRepository(DbConnectionModel config)
         {
+            //ILiteDbConnection connection
+            var connection=new LiteDbConnection(config);
             _dbConnection = connection.Connection;
         }
 

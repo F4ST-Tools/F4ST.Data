@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,7 +13,7 @@ namespace F4ST.Data.Dapper
     /// <summary>
     /// Main class for Dapper.SimpleCRUD extensions
     /// </summary>
-    internal static partial class DapperFramework
+    internal partial class DapperFramework
     {
         /// <summary>
         /// <para>By default queries the table matching the class name asynchronously </para>
@@ -31,7 +30,7 @@ namespace F4ST.Data.Dapper
         /// <param name="commandTimeout"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns a single entity by a single id from table T.</returns>
-        public static async Task<T> GetAsync<T>(this IDbConnection connection, object id,
+        public async Task<T> GetAsync<T>(IDbConnection connection, object id,
             IDbTransaction transaction = null, int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
@@ -86,7 +85,7 @@ namespace F4ST.Data.Dapper
         /// <param name="commandTimeout"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Gets a list of entities with optional exact match where conditions</returns>
-        public static Task<IEnumerable<T>> GetListAsync<T>(this IDbConnection connection, object whereConditions,
+        public Task<IEnumerable<T>> GetListAsync<T>(IDbConnection connection, object whereConditions,
             IDbTransaction transaction = null, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var currenttype = typeof(T);
@@ -106,7 +105,7 @@ namespace F4ST.Data.Dapper
             }
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("GetList<{0}>: {1}", currenttype, sb));
+                Trace.WriteLine($"GetList<{currenttype}>: {sb}");
 
             return connection.QueryAsync<T>(new CommandDefinition(sb.ToString(), whereConditions, transaction, commandTimeout,cancellationToken:cancellationToken));
         }
@@ -127,7 +126,7 @@ namespace F4ST.Data.Dapper
         /// <param name="commandTimeout"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Gets a list of entities with optional SQL where conditions</returns>
-        public static Task<IEnumerable<T>> GetListAsync<T>(this IDbConnection connection, string conditions,
+        public Task<IEnumerable<T>> GetListAsync<T>(IDbConnection connection, string conditions,
             object parameters = null, IDbTransaction transaction = null, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var currenttype = typeof(T);
@@ -144,7 +143,7 @@ namespace F4ST.Data.Dapper
             sb.Append(" " + conditions);
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("GetList<{0}>: {1}", currenttype, sb));
+                Trace.WriteLine($"GetList<{currenttype}>: {sb}");
 
             return connection.QueryAsync<T>(new CommandDefinition(sb.ToString(), parameters, transaction, commandTimeout, cancellationToken:cancellationToken));
         }
@@ -158,9 +157,9 @@ namespace F4ST.Data.Dapper
         /// <param name="connection"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Gets a list of all entities</returns>
-        public static Task<IEnumerable<T>> GetListAsync<T>(this IDbConnection connection, CancellationToken cancellationToken = default)
+        public Task<IEnumerable<T>> GetListAsync<T>(IDbConnection connection, CancellationToken cancellationToken = default)
         {
-            return connection.GetListAsync<T>(new { },cancellationToken:cancellationToken);
+            return GetListAsync<T>(connection, new { },cancellationToken:cancellationToken);
         }
 
         /// <summary>
@@ -182,7 +181,7 @@ namespace F4ST.Data.Dapper
         /// <param name="commandTimeout"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Gets a list of entities with optional exact match where conditions</returns>
-        public static Task<IEnumerable<T>> GetListPagedAsync<T>(this IDbConnection connection, int pageNumber,
+        public Task<IEnumerable<T>> GetListPagedAsync<T>(IDbConnection connection, int pageNumber,
             int rowsPerPage, string conditions, string orderby, object parameters = null,
             IDbTransaction transaction = null, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
@@ -215,7 +214,7 @@ namespace F4ST.Data.Dapper
             query = query.Replace("{Offset}", ((pageNumber - 1) * rowsPerPage).ToString());
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("GetListPaged<{0}>: {1}", currenttype, query));
+                Trace.WriteLine($"GetListPaged<{currenttype}>: {query}");
 
             return connection.QueryAsync<T>(new CommandDefinition(query, parameters, transaction, commandTimeout, cancellationToken:cancellationToken));
         }
@@ -235,7 +234,7 @@ namespace F4ST.Data.Dapper
         /// <param name="commandTimeout"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>The ID (primary key) of the newly inserted record if it is identity using the int? type, otherwise null</returns>
-        public static Task<int?> InsertAsync<TEntity>(this IDbConnection connection, TEntity entityToInsert,
+        public Task<int?> InsertAsync<TEntity>(IDbConnection connection, TEntity entityToInsert,
             IDbTransaction transaction = null, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             return InsertAsync<int?, TEntity>(connection, entityToInsert, transaction, commandTimeout, cancellationToken);
@@ -256,7 +255,7 @@ namespace F4ST.Data.Dapper
         /// <param name="commandTimeout"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>The ID (primary key) of the newly inserted record if it is identity using the defined type, otherwise null</returns>
-        public static async Task<TKey> InsertAsync<TKey, TEntity>(this IDbConnection connection, TEntity entityToInsert,
+        public async Task<TKey> InsertAsync<TKey, TEntity>(IDbConnection connection, TEntity entityToInsert,
             IDbTransaction transaction = null, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var idProps = GetIdProperties(entityToInsert).ToList();
@@ -311,7 +310,7 @@ namespace F4ST.Data.Dapper
             }
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("Insert: {0}", sb));
+                Trace.WriteLine($"Insert: {sb}");
 
             if (keytype == typeof(Guid) || keyHasPredefinedValue)
             {
@@ -338,7 +337,7 @@ namespace F4ST.Data.Dapper
         /// <param name="commandTimeout"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>The number of affected records</returns>
-        public static Task<int> UpdateAsync<TEntity>(this IDbConnection connection, TEntity entityToUpdate,
+        public Task<int> UpdateAsync<TEntity>(IDbConnection connection, TEntity entityToUpdate,
             IDbTransaction transaction = null, int? commandTimeout = null,
             System.Threading.CancellationToken? cancellationToken = null)
         {
@@ -358,7 +357,7 @@ namespace F4ST.Data.Dapper
             BuildWhere<TEntity>(sb, idProps, entityToUpdate);
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("Update: {0}", sb));
+                Trace.WriteLine($"Update: {sb}");
 
             System.Threading.CancellationToken cancelToken = cancellationToken ?? default(System.Threading.CancellationToken);
             return connection.ExecuteAsync(new CommandDefinition(sb.ToString(), entityToUpdate, transaction,
@@ -379,7 +378,7 @@ namespace F4ST.Data.Dapper
         /// <param name="commandTimeout"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>The number of records affected</returns>
-        public static Task<int> DeleteAsync<T>(this IDbConnection connection, T entityToDelete,
+        public Task<int> DeleteAsync<T>(IDbConnection connection, T entityToDelete,
             IDbTransaction transaction = null, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var idProps = GetIdProperties(entityToDelete).ToList();
@@ -396,7 +395,7 @@ namespace F4ST.Data.Dapper
             BuildWhere<T>(sb, idProps, entityToDelete);
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("Delete: {0}", sb));
+                Trace.WriteLine($"Delete: {sb}");
 
             return connection.ExecuteAsync(new CommandDefinition(sb.ToString(), entityToDelete, transaction, commandTimeout,cancellationToken:cancellationToken));
         }
@@ -416,7 +415,7 @@ namespace F4ST.Data.Dapper
         /// <param name="commandTimeout"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>The number of records affected</returns>
-        public static Task<int> DeleteAsync<T>(this IDbConnection connection, object id,
+        public Task<int> DeleteAsync<T>(IDbConnection connection, object id,
             IDbTransaction transaction = null, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var currenttype = typeof(T);
@@ -447,7 +446,7 @@ namespace F4ST.Data.Dapper
             }
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("Delete<{0}> {1}", currenttype, sb));
+                Trace.WriteLine($"Delete<{currenttype}> {sb}");
 
             return connection.ExecuteAsync(new CommandDefinition(sb.ToString(), dynParms, transaction, commandTimeout,cancellationToken:cancellationToken));
         }
@@ -469,7 +468,7 @@ namespace F4ST.Data.Dapper
         /// <param name="commandTimeout"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>The number of records affected</returns>
-        public static Task<int> DeleteListAsync<T>(this IDbConnection connection, object whereConditions,
+        public Task<int> DeleteListAsync<T>(IDbConnection connection, object whereConditions,
             IDbTransaction transaction = null, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var currenttype = typeof(T);
@@ -485,7 +484,7 @@ namespace F4ST.Data.Dapper
             }
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("DeleteList<{0}> {1}", currenttype, sb));
+                Trace.WriteLine($"DeleteList<{currenttype}> {sb}");
 
             return connection.ExecuteAsync(new CommandDefinition(sb.ToString(), whereConditions, transaction, commandTimeout,cancellationToken:cancellationToken));
         }
@@ -506,7 +505,7 @@ namespace F4ST.Data.Dapper
         /// <param name="commandTimeout"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>The number of records affected</returns>
-        public static Task<int> DeleteListAsync<T>(this IDbConnection connection, string conditions,
+        public Task<int> DeleteListAsync<T>(IDbConnection connection, string conditions,
             object parameters = null, IDbTransaction transaction = null, int? commandTimeout = null, 
             CancellationToken cancellationToken = default)
         {
@@ -523,7 +522,7 @@ namespace F4ST.Data.Dapper
             sb.Append(" " + conditions);
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("DeleteList<{0}> {1}", currenttype, sb));
+                Trace.WriteLine($"DeleteList<{currenttype}> {sb}");
 
             return connection.ExecuteAsync(new CommandDefinition(sb.ToString(), parameters, transaction, commandTimeout,cancellationToken:cancellationToken));
         }
@@ -543,7 +542,7 @@ namespace F4ST.Data.Dapper
         /// <param name="commandTimeout"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns a count of records.</returns>
-        public static Task<int> RecordCountAsync<T>(this IDbConnection connection, string conditions = "",
+        public Task<int> RecordCountAsync<T>(IDbConnection connection, string conditions = "",
             object parameters = null, IDbTransaction transaction = null, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var currenttype = typeof(T);
@@ -554,7 +553,7 @@ namespace F4ST.Data.Dapper
             sb.Append(" " + conditions);
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("RecordCount<{0}>: {1}", currenttype, sb));
+                Trace.WriteLine($"RecordCount<{currenttype}>: {sb}");
 
             return connection.ExecuteScalarAsync<int>(new CommandDefinition(sb.ToString(), parameters, transaction, commandTimeout,cancellationToken:cancellationToken));
         }
@@ -573,7 +572,7 @@ namespace F4ST.Data.Dapper
         /// <param name="commandTimeout"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns a count of records.</returns>
-        public static Task<int> RecordCountAsync<T>(this IDbConnection connection, object whereConditions,
+        public Task<int> RecordCountAsync<T>(IDbConnection connection, object whereConditions,
             IDbTransaction transaction = null, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var currenttype = typeof(T);
@@ -590,12 +589,12 @@ namespace F4ST.Data.Dapper
             }
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("RecordCount<{0}>: {1}", currenttype, sb));
+                Trace.WriteLine($"RecordCount<{currenttype}>: {sb}");
 
             return connection.ExecuteScalarAsync<int>(sb.ToString(), whereConditions, transaction, commandTimeout);
         }
 
-        public static async Task<IEnumerable<T>> ExecuteListAsync<T>(this IDbConnection connection,
+        public async Task<IEnumerable<T>> ExecuteListAsync<T>(IDbConnection connection,
             string procedureName, object parameters, IDbTransaction transaction = null, int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
@@ -611,7 +610,7 @@ namespace F4ST.Data.Dapper
                 CommandType.StoredProcedure, cancellationToken: cancellationToken));
         }
 
-        public static async Task<T> ExecuteSingleAsync<T>(this IDbConnection connection, string procedureName,
+        public async Task<T> ExecuteSingleAsync<T>(IDbConnection connection, string procedureName,
             object parameters, IDbTransaction transaction = null, int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
@@ -630,7 +629,7 @@ namespace F4ST.Data.Dapper
             //return res.FirstOrDefault();
         }
 
-        public static async Task<int> ExecuteScalarAsync(this IDbConnection connection, string procedureName,
+        public async Task<int> ExecuteScalarAsync(IDbConnection connection, string procedureName,
             object parameters, IDbTransaction transaction = null, int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
@@ -644,7 +643,7 @@ namespace F4ST.Data.Dapper
         }
 
 
-        public static async Task ExecuteNoneAsync(this IDbConnection connection, string procedureName,
+        public async Task ExecuteNoneAsync(IDbConnection connection, string procedureName,
             object parameters, IDbTransaction transaction = null, int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
@@ -657,7 +656,7 @@ namespace F4ST.Data.Dapper
                 CommandType.StoredProcedure, cancellationToken: cancellationToken));
         }
 
-        public static async Task<IEnumerable<T>> ExecuteFunctionAsync<T>(this IDbConnection connection,
+        public async Task<IEnumerable<T>> ExecuteFunctionAsync<T>(IDbConnection connection,
             string selectParameter, object whereConditions, IDbTransaction transaction = null,
             int? commandTimeout = null,
             CancellationToken cancellationToken = default)
@@ -683,7 +682,7 @@ namespace F4ST.Data.Dapper
             }
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("GetList<{0}>: {1}", currenttype, sb));
+                Trace.WriteLine($"GetList<{currenttype}>: {sb}");
 
             return await connection.QueryAsync<T>(new CommandDefinition(sb.ToString(), whereConditions, transaction,
                 commandTimeout,

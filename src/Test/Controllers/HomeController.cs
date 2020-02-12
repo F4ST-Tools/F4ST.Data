@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
+using F4ST.Common.Containers;
 using F4ST.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Raven.Client.Documents.Subscriptions;
 using Test.Data;
 using Test.Models;
 
@@ -17,19 +15,19 @@ namespace Test.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly IRepository _repository;
 
-        public HomeController(ILogger<HomeController> logger, IRepository repository)
+        public HomeController(ILogger<HomeController> logger, IServiceProvider provider)
         {
             _logger = logger;
-            _repository = repository;
+            _repository = provider.GetRepository("SQLServer");
         }
 
         public async Task<IActionResult> Index()
         {
-            var count =await _repository.Count<TestEntity>();
+            var count = await _repository.Count<TestEntity>();
 
             if (count == 0)
             {
-                var item=new TestEntity()
+                var item = new TestEntity()
                 {
                     Name = "test",
                     Family = "test"
@@ -39,7 +37,7 @@ namespace Test.Controllers
                 await _repository.SaveChanges();
             }
 
-            var items =await _repository.Find<TestEntity>(t => t.Name=="test");
+            var items = await _repository.Find<TestEntity>(t => t.Name == "test");
 
             return View();
         }

@@ -15,10 +15,10 @@ namespace F4ST.Data.RavenDB
         private readonly IRavenDbConnection _dbConnection;
         private readonly IAsyncDocumentSession _session;
 
-        public RavenDbRepository(IRavenDbConnection connection)
+        public RavenDbRepository(DbConnectionModel config)
         {
-            _dbConnection = connection;
-            _session = connection.Connection.OpenAsyncSession();
+            _dbConnection = new RavenDbConnection(config);
+            _session = _dbConnection.Connection.OpenAsyncSession();
         }
 
         public void Dispose()

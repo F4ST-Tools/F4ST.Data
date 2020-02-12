@@ -6,6 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using F4ST.Common.Containers;
 using F4ST.Common.Extensions;
 
 namespace F4ST.Data.Dapper
@@ -14,11 +15,38 @@ namespace F4ST.Data.Dapper
     {
         private readonly IDbConnection _connection;
         private IDbTransaction _transaction = null;
-
+        private DapperFramework _dapper;
         private int Timeout { get; set; } = 30;
 
-        public DapperRepository(IDapperConnection connection)
+        public DapperRepository(DbConnectionModel config)
         {
+            
+            string provider;
+            Dialect dialect;
+            switch (((config as DapperConnectionConfig)?.Provider.ToLower()))
+            {
+                case "mysql":
+                    provider = "Dapper.MySQL";
+                    dialect = Dialect.MySQL;
+                    break;
+                case "postgresql":
+                    provider = "Dapper.PostgreSQL";
+                    dialect = Dialect.PostgreSQL;
+                    break;
+                case "sqlite":
+                    provider = "Dapper.SQLite";
+                    dialect = Dialect.SQLite;
+                    break;
+                case "sqlserver":
+                default:
+                    provider = "Dapper.SQLServer";
+                    dialect = Dialect.SQLServer;
+                    break;
+            }
+
+            var connection = IoC.Resolve<IDapperConnection>(provider, new{ dbConnection = config});
+
+            _dapper = new DapperFramework(dialect);
             _connection = connection.Connection;
             _connection.Open();
             OpenTransaction();
@@ -31,7 +59,7 @@ namespace F4ST.Data.Dapper
                 RollbackTransaction();
             }
 
-            if (_connection?.State != ConnectionState.Closed) 
+            if (_connection?.State != ConnectionState.Closed)
                 _connection?.Close();
             _connection?.Dispose();
         }
@@ -76,7 +104,7 @@ namespace F4ST.Data.Dapper
         public Task<T> Get<T>(object id, CancellationToken cancellationToken = default)
             where T : DbEntity
         {
-            return _connection.GetAsync<T>(id, _transaction, Timeout, cancellationToken);
+            return _dapper.GetAsync<T>(_connection, id, _transaction, Timeout, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -136,7 +164,7 @@ namespace F4ST.Data.Dapper
         /// <inheritdoc />
         public Task Add<T>(T entity, CancellationToken cancellationToken = default) where T : DbEntity
         {
-            return _connection.InsertAsync(entity, _transaction, Timeout, cancellationToken);
+            return _dapper.InsertAsync(_connection, entity, _transaction, Timeout, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -156,7 +184,7 @@ namespace F4ST.Data.Dapper
         public Task Update<T>(T entity, CancellationToken cancellationToken = default) where T : DbEntity
         {
             entity.ModifiedOn = DateTime.Now;
-            return _connection.UpdateAsync(entity, _transaction, Timeout, cancellationToken);
+            return _dapper.UpdateAsync(_connection, entity, _transaction, Timeout, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -185,7 +213,7 @@ namespace F4ST.Data.Dapper
             var where = tran.Translate(filter);
             Debugger.Break();
 
-            var items = await _connection.GetListAsync<T>(where, null, _transaction, Timeout, cancellationToken);
+            var items = await _dapper.GetListAsync<T>(_connection, where, null, _transaction, Timeout, cancellationToken);
             var dbItems = items as T[] ?? items.ToArray();
             foreach (var item in dbItems)
             {
@@ -203,14 +231,14 @@ namespace F4ST.Data.Dapper
         public void Delete<T>(object id)
             where T : DbEntity
         {
-            _connection.Delete<T>(id, _transaction, Timeout);
+            _dapper.Delete<T>(_connection, id, _transaction, Timeout);
         }
 
         /// <inheritdoc />
         public Task Delete<T>(T entity, CancellationToken cancellationToken = default)
             where T : DbEntity
         {
-            return _connection.DeleteAsync(entity, _transaction, Timeout, cancellationToken);
+            return _dapper.DeleteAsync(_connection, entity, _transaction, Timeout, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -222,13 +250,13 @@ namespace F4ST.Data.Dapper
             var where = tran.Translate(filter);
             Debugger.Break();
 
-            return _connection.DeleteListAsync<T>(where, null, _transaction, Timeout, cancellationToken);
+            return _dapper.DeleteListAsync<T>(_connection, where, null, _transaction, Timeout, cancellationToken);
         }
 
         /// <inheritdoc />
         public Task DeleteAll<T>(CancellationToken cancellationToken = default) where T : DbEntity
         {
-            return _connection.DeleteListAsync<T>(new{}, _transaction, Timeout, cancellationToken);
+            return _dapper.DeleteListAsync<T>(_connection, new { }, _transaction, Timeout, cancellationToken);
         }
 
         #endregion
@@ -244,7 +272,7 @@ namespace F4ST.Data.Dapper
             var where = tran.Translate(filter);
             Debugger.Break();
 
-            return _connection.GetListAsync<T>(where, null, _transaction, Timeout, cancellationToken);
+            return _dapper.GetListAsync<T>(_connection, where, null, _transaction, Timeout, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -275,7 +303,7 @@ namespace F4ST.Data.Dapper
             var orderBy = $"{order.Name} ";
             orderBy += !isDescending ? "asc" : "desc";
 
-            return _connection.GetListPagedAsync<T>(pageIndex, size, where, orderBy,null, _transaction, Timeout, cancellationToken);
+            return _dapper.GetListPagedAsync<T>(_connection, pageIndex, size, where, orderBy, null, _transaction, Timeout, cancellationToken);
         }
 
         #endregion
@@ -285,7 +313,7 @@ namespace F4ST.Data.Dapper
         /// <inheritdoc />
         public async Task<long> Count<T>(CancellationToken cancellationToken = default) where T : DbEntity
         {
-            return await _connection.RecordCountAsync<T>(cancellationToken: cancellationToken);
+            return await _dapper.RecordCountAsync<T>(_connection, cancellationToken: cancellationToken);
         }
 
         /// <inheritdoc />
@@ -297,7 +325,7 @@ namespace F4ST.Data.Dapper
             var where = tran.Translate(filter);
             Debugger.Break();
 
-            return await _connection.RecordCountAsync<T>(where,null,_transaction,Timeout, cancellationToken);
+            return await _dapper.RecordCountAsync<T>(_connection, where, null, _transaction, Timeout, cancellationToken);
         }
 
         /// <inheritdoc />

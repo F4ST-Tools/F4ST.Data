@@ -9,7 +9,11 @@ namespace F4ST.Data.Dapper.SQLServer
     {
         public void Install(WindsorContainer container, IMapper mapper)
         {
-            container.Register(Component.For<IDapperConnection>().ImplementedBy<SqlServerConnection>().LifestyleTransient());
+            container.Register(Component.
+                For<IDapperConnection>()
+                .ImplementedBy<SqlServerConnection>()
+                .Named("Dapper.SQLServer")
+                .LifestyleTransient());
         }
     }
 }

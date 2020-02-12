@@ -10,9 +10,5 @@ namespace F4ST.Data.Dapper.SQLServer
         
         public Type GetRepository => typeof(DapperRepository);
         
-        public void Init()
-        {
-            Dapper.DapperConnection.SetDialect(Dialect.SQLServer);
-        }
     }
 }

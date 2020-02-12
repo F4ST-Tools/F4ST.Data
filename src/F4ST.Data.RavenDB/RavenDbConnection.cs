@@ -8,7 +8,7 @@ namespace F4ST.Data.RavenDB
         private static IDocumentStore _connection = null;
         public IDocumentStore Connection => _connection;
 
-        public RavenDbConnection(/*IAppSetting appSetting,*/ DbConnectionModel dbConnection)
+        public RavenDbConnection(DbConnectionModel dbConnection)
         {
             if (_connection != null)
                 return;

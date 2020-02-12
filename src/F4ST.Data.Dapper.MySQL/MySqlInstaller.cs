@@ -9,7 +9,11 @@ namespace F4ST.Data.Dapper.MySQL
     {
         public void Install(WindsorContainer container, IMapper mapper)
         {
-            container.Register(Component.For<IDapperConnection>().ImplementedBy<MySqlConnection>().LifestyleTransient());
+            container.Register(Component
+                .For<IDapperConnection>()
+                .ImplementedBy<MySqlConnection>()
+                .Named("Dapper.MySQL")
+                .LifestyleTransient());
         }
     }
 }

@@ -9,7 +9,11 @@ namespace F4ST.Data.Dapper.SQLite
     {
         public void Install(WindsorContainer container, IMapper mapper)
         {
-            container.Register(Component.For<IDapperConnection>().ImplementedBy<SqliteConnection>().LifestyleTransient());
+            container.Register(Component
+                .For<IDapperConnection>()
+                .ImplementedBy<SqliteConnection>()
+                .Named("Dapper.SQLite")
+                .LifestyleTransient());
         }
     }
 }

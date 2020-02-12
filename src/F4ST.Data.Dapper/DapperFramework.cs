@@ -14,27 +14,27 @@ namespace F4ST.Data.Dapper
     /// <summary>
     /// Main class for Dapper.SimpleCRUD extensions
     /// </summary>
-    internal static partial class DapperFramework
+    internal partial class DapperFramework
     {
 
-        static DapperFramework()
+        public DapperFramework(Dialect dialect)
         {
-            SetDialect(_dialect);
+            SetDialect(dialect);
         }
 
-        private static Dialect _dialect = Dialect.SQLServer;
-        private static string _encapsulation;
-        private static string _getIdentitySql;
-        private static string _getPagedListSql;
+        private Dialect _dialect = Dialect.SQLServer;
+        private string _encapsulation;
+        private string _getIdentitySql;
+        private string _getPagedListSql;
 
-        private static readonly ConcurrentDictionary<Type, string> TableNames = new ConcurrentDictionary<Type, string>();
-        private static readonly ConcurrentDictionary<string, string> ColumnNames = new ConcurrentDictionary<string, string>();
+        private readonly ConcurrentDictionary<Type, string> TableNames = new ConcurrentDictionary<Type, string>();
+        private readonly ConcurrentDictionary<string, string> ColumnNames = new ConcurrentDictionary<string, string>();
 
-        private static readonly ConcurrentDictionary<string, string> StringBuilderCacheDict = new ConcurrentDictionary<string, string>();
-        private static bool StringBuilderCacheEnabled = true;
+        private readonly ConcurrentDictionary<string, string> StringBuilderCacheDict = new ConcurrentDictionary<string, string>();
+        private bool StringBuilderCacheEnabled = true;
 
-        private static ITableNameResolver _tableNameResolver = new TableNameResolver();
-        private static IColumnNameResolver _columnNameResolver = new ColumnNameResolver();
+        private ITableNameResolver _tableNameResolver = new TableNameResolver();
+        private IColumnNameResolver _columnNameResolver = new ColumnNameResolver();
 
         /// <summary>
         /// Append a Cached version of a strinbBuilderAction result based on a cacheKey
@@ -42,7 +42,7 @@ namespace F4ST.Data.Dapper
         /// <param name="sb"></param>
         /// <param name="cacheKey"></param>
         /// <param name="stringBuilderAction"></param>
-        private static void StringBuilderCache(StringBuilder sb, string cacheKey, Action<StringBuilder> stringBuilderAction)
+        private void StringBuilderCache(StringBuilder sb, string cacheKey, Action<StringBuilder> stringBuilderAction)
         {
             if (StringBuilderCacheEnabled && StringBuilderCacheDict.TryGetValue(cacheKey, out string value))
             {
@@ -61,7 +61,7 @@ namespace F4ST.Data.Dapper
         /// Returns the current dialect name
         /// </summary>
         /// <returns></returns>
-        public static string GetDialect()
+        public string GetDialect()
         {
             return _dialect.ToString();
         }
@@ -70,7 +70,7 @@ namespace F4ST.Data.Dapper
         /// Sets the database dialect 
         /// </summary>
         /// <param name="dialect"></param>
-        public static void SetDialect(Dialect dialect)
+        public void SetDialect(Dialect dialect)
         {
             switch (dialect)
             {
@@ -92,6 +92,7 @@ namespace F4ST.Data.Dapper
                     _getIdentitySql = string.Format("SELECT LAST_INSERT_ID() AS id");
                     _getPagedListSql = "Select {SelectColumns} from {TableName} {WhereClause} Order By {OrderBy} LIMIT {Offset},{RowsPerPage}";
                     break;
+                case Dialect.SQLServer:
                 default:
                     _dialect = Dialect.SQLServer;
                     _encapsulation = "[{0}]";
@@ -105,7 +106,7 @@ namespace F4ST.Data.Dapper
         /// Sets the table name resolver
         /// </summary>
         /// <param name="resolver">The resolver to use when requesting the format of a table name</param>
-        public static void SetTableNameResolver(ITableNameResolver resolver)
+        public void SetTableNameResolver(ITableNameResolver resolver)
         {
             _tableNameResolver = resolver;
         }
@@ -114,7 +115,7 @@ namespace F4ST.Data.Dapper
         /// Sets the column name resolver
         /// </summary>
         /// <param name="resolver">The resolver to use when requesting the format of a column name</param>
-        public static void SetColumnNameResolver(IColumnNameResolver resolver)
+        public void SetColumnNameResolver(IColumnNameResolver resolver)
         {
             _columnNameResolver = resolver;
         }
@@ -133,7 +134,7 @@ namespace F4ST.Data.Dapper
         /// <param name="transaction"></param>
         /// <param name="commandTimeout"></param>
         /// <returns>Returns a single entity by a single id from table T.</returns>
-        public static T Get<T>(this IDbConnection connection, object id, IDbTransaction transaction = null, int? commandTimeout = null)
+        public T Get<T>(IDbConnection connection, object id, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             var currenttype = typeof(T);
             var idProps = GetIdProperties(currenttype).ToList();
@@ -165,7 +166,7 @@ namespace F4ST.Data.Dapper
             }
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("Get<{0}>: {1} with Id: {2}", currenttype, sb, id));
+                Trace.WriteLine($"Get<{currenttype}>: {sb} with Id: {id}");
 
             return connection.Query<T>(sb.ToString(), dynParms, transaction, true, commandTimeout).FirstOrDefault();
         }
@@ -183,7 +184,7 @@ namespace F4ST.Data.Dapper
         /// <param name="transaction"></param>
         /// <param name="commandTimeout"></param>
         /// <returns>Gets a list of entities with optional exact match where conditions</returns>
-        public static IEnumerable<T> GetList<T>(this IDbConnection connection, object whereConditions, IDbTransaction transaction = null, int? commandTimeout = null)
+        public IEnumerable<T> GetList<T>(IDbConnection connection, object whereConditions, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             var currenttype = typeof(T);
             var name = GetTableName(currenttype);
@@ -202,7 +203,7 @@ namespace F4ST.Data.Dapper
             }
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("GetList<{0}>: {1}", currenttype, sb));
+                Trace.WriteLine($"GetList<{currenttype}>: {sb}");
 
             return connection.Query<T>(sb.ToString(), whereConditions, transaction, true, commandTimeout);
         }
@@ -222,7 +223,7 @@ namespace F4ST.Data.Dapper
         /// <param name="transaction"></param>
         /// <param name="commandTimeout"></param>
         /// <returns>Gets a list of entities with optional SQL where conditions</returns>
-        public static IEnumerable<T> GetList<T>(this IDbConnection connection, string conditions, object parameters = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public IEnumerable<T> GetList<T>(IDbConnection connection, string conditions, object parameters = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             var currenttype = typeof(T);
             var name = GetTableName(currenttype);
@@ -236,7 +237,7 @@ namespace F4ST.Data.Dapper
             sb.Append(" " + conditions);
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("GetList<{0}>: {1}", currenttype, sb));
+                Trace.WriteLine($"GetList<{currenttype}>: {sb}");
 
             return connection.Query<T>(sb.ToString(), parameters, transaction, true, commandTimeout);
         }
@@ -249,9 +250,9 @@ namespace F4ST.Data.Dapper
         /// <typeparam name="T"></typeparam>
         /// <param name="connection"></param>
         /// <returns>Gets a list of all entities</returns>
-        public static IEnumerable<T> GetList<T>(this IDbConnection connection)
+        public IEnumerable<T> GetList<T>(IDbConnection connection)
         {
-            return connection.GetList<T>(new { });
+            return GetList<T>(connection, new { });
         }
 
         /// <summary>
@@ -273,7 +274,7 @@ namespace F4ST.Data.Dapper
         /// <param name="transaction"></param>
         /// <param name="commandTimeout"></param>
         /// <returns>Gets a paged list of entities with optional exact match where conditions</returns>
-        public static IEnumerable<T> GetListPaged<T>(this IDbConnection connection, int pageNumber, int rowsPerPage, string conditions, string orderby, object parameters = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public IEnumerable<T> GetListPaged<T>(IDbConnection connection, int pageNumber, int rowsPerPage, string conditions, string orderby, object parameters = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             if (string.IsNullOrEmpty(_getPagedListSql))
                 throw new Exception("GetListPage is not supported with the current SQL Dialect");
@@ -305,7 +306,7 @@ namespace F4ST.Data.Dapper
             query = query.Replace("{Offset}", ((pageNumber - 1) * rowsPerPage).ToString());
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("GetListPaged<{0}>: {1}", currenttype, query));
+                Trace.WriteLine($"GetListPaged<{currenttype}>: {query}");
 
             return connection.Query<T>(query, parameters, transaction, true, commandTimeout);
         }
@@ -324,7 +325,7 @@ namespace F4ST.Data.Dapper
         /// <param name="transaction"></param>
         /// <param name="commandTimeout"></param>
         /// <returns>The ID (primary key) of the newly inserted record if it is identity using the int? type, otherwise null</returns>
-        public static int? Insert<TEntity>(this IDbConnection connection, TEntity entityToInsert, IDbTransaction transaction = null, int? commandTimeout = null)
+        public int? Insert<TEntity>(IDbConnection connection, TEntity entityToInsert, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             return Insert<int?, TEntity>(connection, entityToInsert, transaction, commandTimeout);
         }
@@ -343,7 +344,7 @@ namespace F4ST.Data.Dapper
         /// <param name="transaction"></param>
         /// <param name="commandTimeout"></param>
         /// <returns>The ID (primary key) of the newly inserted record if it is identity using the defined type, otherwise null</returns>
-        public static TKey Insert<TKey, TEntity>(this IDbConnection connection, TEntity entityToInsert, IDbTransaction transaction = null, int? commandTimeout = null)
+        public TKey Insert<TKey, TEntity>(IDbConnection connection, TEntity entityToInsert, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             var idProps = GetIdProperties(entityToInsert).ToList();
 
@@ -395,7 +396,7 @@ namespace F4ST.Data.Dapper
             }
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("Insert: {0}", sb));
+                Trace.WriteLine($"Insert: {sb}");
 
             var r = connection.Query(sb.ToString(), entityToInsert, transaction, true, commandTimeout);
 
@@ -420,7 +421,7 @@ namespace F4ST.Data.Dapper
         /// <param name="transaction"></param>
         /// <param name="commandTimeout"></param>
         /// <returns>The number of affected records</returns>
-        public static int Update<TEntity>(this IDbConnection connection, TEntity entityToUpdate, IDbTransaction transaction = null, int? commandTimeout = null)
+        public int Update<TEntity>(IDbConnection connection, TEntity entityToUpdate, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             var masterSb = new StringBuilder();
             StringBuilderCache(masterSb, $"{typeof(TEntity).FullName}_Update", sb =>
@@ -440,7 +441,7 @@ namespace F4ST.Data.Dapper
                 BuildWhere<TEntity>(sb, idProps, entityToUpdate);
 
                 if (Debugger.IsAttached)
-                    Trace.WriteLine(String.Format("Update: {0}", sb));
+                    Trace.WriteLine($"Update: {sb}");
             });
             return connection.Execute(masterSb.ToString(), entityToUpdate, transaction, commandTimeout);
         }
@@ -458,7 +459,7 @@ namespace F4ST.Data.Dapper
         /// <param name="transaction"></param>
         /// <param name="commandTimeout"></param>
         /// <returns>The number of records affected</returns>
-        public static int Delete<T>(this IDbConnection connection, T entityToDelete, IDbTransaction transaction = null, int? commandTimeout = null)
+        public int Delete<T>(IDbConnection connection, T entityToDelete, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             var masterSb = new StringBuilder();
             StringBuilderCache(masterSb, $"{typeof(T).FullName}_Delete", sb =>
@@ -477,7 +478,7 @@ namespace F4ST.Data.Dapper
                 BuildWhere<T>(sb, idProps, entityToDelete);
 
                 if (Debugger.IsAttached)
-                    Trace.WriteLine(String.Format("Delete: {0}", sb));
+                    Trace.WriteLine($"Delete: {sb}");
             });
             return connection.Execute(masterSb.ToString(), entityToDelete, transaction, commandTimeout);
         }
@@ -496,7 +497,7 @@ namespace F4ST.Data.Dapper
         /// <param name="transaction"></param>
         /// <param name="commandTimeout"></param>
         /// <returns>The number of records affected</returns>
-        public static int Delete<T>(this IDbConnection connection, object id, IDbTransaction transaction = null, int? commandTimeout = null)
+        public int Delete<T>(IDbConnection connection, object id, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             var currenttype = typeof(T);
             var idProps = GetIdProperties(currenttype).ToList();
@@ -527,7 +528,7 @@ namespace F4ST.Data.Dapper
             }
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("Delete<{0}> {1}", currenttype, sb));
+                Trace.WriteLine($"Delete<{currenttype}> {sb}");
 
             return connection.Execute(sb.ToString(), dynParms, transaction, commandTimeout);
         }
@@ -547,7 +548,7 @@ namespace F4ST.Data.Dapper
         /// <param name="transaction"></param>
         /// <param name="commandTimeout"></param>
         /// <returns>The number of records affected</returns>
-        public static int DeleteList<T>(this IDbConnection connection, object whereConditions, IDbTransaction transaction = null, int? commandTimeout = null)
+        public int DeleteList<T>(IDbConnection connection, object whereConditions, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             var masterSb = new StringBuilder();
             StringBuilderCache(masterSb, $"{typeof(T).FullName}_DeleteWhere{whereConditions?.GetType()?.FullName}", sb =>
@@ -564,7 +565,7 @@ namespace F4ST.Data.Dapper
                 }
 
                 if (Debugger.IsAttached)
-                    Trace.WriteLine(String.Format("DeleteList<{0}> {1}", currenttype, sb));
+                    Trace.WriteLine($"DeleteList<{currenttype}> {sb}");
             });
             return connection.Execute(masterSb.ToString(), whereConditions, transaction, commandTimeout);
         }
@@ -585,7 +586,7 @@ namespace F4ST.Data.Dapper
         /// <param name="transaction"></param>
         /// <param name="commandTimeout"></param>
         /// <returns>The number of records affected</returns>
-        public static int DeleteList<T>(this IDbConnection connection, string conditions, object parameters = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public int DeleteList<T>(IDbConnection connection, string conditions, object parameters = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             var masterSb = new StringBuilder();
             StringBuilderCache(masterSb, $"{typeof(T).FullName}_DeleteWhere{conditions}", sb =>
@@ -602,7 +603,7 @@ namespace F4ST.Data.Dapper
                 sb.Append(" " + conditions);
 
                 if (Debugger.IsAttached)
-                    Trace.WriteLine(String.Format("DeleteList<{0}> {1}", currenttype, sb));
+                    Trace.WriteLine($"DeleteList<{currenttype}> {sb}");
             });
             return connection.Execute(masterSb.ToString(), parameters, transaction, commandTimeout);
         }
@@ -622,7 +623,7 @@ namespace F4ST.Data.Dapper
         /// <param name="transaction"></param>
         /// <param name="commandTimeout"></param>
         /// <returns>Returns a count of records.</returns>
-        public static int RecordCount<T>(this IDbConnection connection, string conditions = "", object parameters = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public int RecordCount<T>(IDbConnection connection, string conditions = "", object parameters = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             var currenttype = typeof(T);
             var name = GetTableName(currenttype);
@@ -632,7 +633,7 @@ namespace F4ST.Data.Dapper
             sb.Append(" " + conditions);
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("RecordCount<{0}>: {1}", currenttype, sb));
+                Trace.WriteLine($"RecordCount<{currenttype}>: {sb}");
 
             return connection.ExecuteScalar<int>(sb.ToString(), parameters, transaction, commandTimeout);
         }
@@ -650,7 +651,7 @@ namespace F4ST.Data.Dapper
         /// <param name="transaction"></param>
         /// <param name="commandTimeout"></param>
         /// <returns>Returns a count of records.</returns>
-        public static int RecordCount<T>(this IDbConnection connection, object whereConditions, IDbTransaction transaction = null, int? commandTimeout = null)
+        public int RecordCount<T>(IDbConnection connection, object whereConditions, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             var currenttype = typeof(T);
             var name = GetTableName(currenttype);
@@ -666,12 +667,12 @@ namespace F4ST.Data.Dapper
             }
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("RecordCount<{0}>: {1}", currenttype, sb));
+                Trace.WriteLine($"RecordCount<{currenttype}>: {sb}");
 
             return connection.ExecuteScalar<int>(sb.ToString(), whereConditions, transaction, commandTimeout);
         }
 
-        public static IEnumerable<T> ExecuteList<T>(this IDbConnection connection, string procedureName, object parameters, IDbTransaction transaction = null, int? commandTimeout = null)
+        public IEnumerable<T> ExecuteList<T>(IDbConnection connection, string procedureName, object parameters, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             var currenttype = typeof(T);
 
@@ -683,7 +684,7 @@ namespace F4ST.Data.Dapper
             return connection.Query<T>(procedureName, parameters, transaction, true, commandTimeout, CommandType.StoredProcedure);
         }
 
-        public static T ExecuteSingle<T>(this IDbConnection connection, string procedureName, object parameters, IDbTransaction transaction = null,
+        public T ExecuteSingle<T>(IDbConnection connection, string procedureName, object parameters, IDbTransaction transaction = null,
             int? commandTimeout = null)
         {
             var currenttype = typeof(T);
@@ -696,7 +697,7 @@ namespace F4ST.Data.Dapper
             return connection.QueryFirstOrDefault<T>(procedureName, parameters, transaction, commandTimeout, CommandType.StoredProcedure);
         }
 
-        public static int ExecuteScalar(this IDbConnection connection, string procedureName, object parameters, IDbTransaction transaction = null,
+        public int ExecuteScalar(IDbConnection connection, string procedureName, object parameters, IDbTransaction transaction = null,
             int? commandTimeout = null)
         {
             var paramprops = GetAllProperties(parameters).ToArray();
@@ -708,7 +709,7 @@ namespace F4ST.Data.Dapper
                 commandTimeout, CommandType.StoredProcedure));
         }
 
-        public static void ExecuteNone(this IDbConnection connection, string procedureName, object parameters, IDbTransaction transaction = null,
+        public void ExecuteNone(IDbConnection connection, string procedureName, object parameters, IDbTransaction transaction = null,
             int? commandTimeout = null)
         {
             var paramprops = GetAllProperties(parameters).ToArray();
@@ -719,7 +720,7 @@ namespace F4ST.Data.Dapper
             connection.Execute(procedureName, parameters, transaction, commandTimeout, CommandType.StoredProcedure);
         }
 
-        public static void ExecuteScript(this IDbConnection connection, string script, object parameters, IDbTransaction transaction = null,
+        public void ExecuteScript(IDbConnection connection, string script, object parameters, IDbTransaction transaction = null,
             int? commandTimeout = null)
         {
             var paramprops = GetAllProperties(parameters).ToArray();
@@ -730,7 +731,7 @@ namespace F4ST.Data.Dapper
             connection.Execute(script, parameters, transaction, commandTimeout, CommandType.Text);
         }
 
-        public static IEnumerable<T> ExecuteFunction<T>(this IDbConnection connection, string selectParameter, object whereConditions, 
+        public IEnumerable<T> ExecuteFunction<T>(IDbConnection connection, string selectParameter, object whereConditions, 
             IDbTransaction transaction = null, int? commandTimeout = null)
         {
             var currenttype = typeof(T);
@@ -754,14 +755,14 @@ namespace F4ST.Data.Dapper
             }
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(String.Format("GetList<{0}>: {1}", currenttype, sb));
+                Trace.WriteLine($"GetList<{currenttype}>: {sb}");
 
             return connection.Query<T>(sb.ToString(), whereConditions, transaction, true, commandTimeout);
         }
 
 
         //build update statement based on list on an entity
-        private static void BuildUpdateSet<T>(T entityToUpdate, StringBuilder masterSb)
+        private void BuildUpdateSet<T>(T entityToUpdate, StringBuilder masterSb)
         {
             StringBuilderCache(masterSb, $"{typeof(T).FullName}_BuildUpdateSet", sb =>
             {
@@ -779,7 +780,7 @@ namespace F4ST.Data.Dapper
         }
 
         //build select clause based on list of properties skipping ones with the IgnoreSelect and NotMapped attribute
-        private static void BuildSelect(StringBuilder masterSb, IEnumerable<PropertyInfo> props)
+        private void BuildSelect(StringBuilder masterSb, IEnumerable<PropertyInfo> props)
         {
             StringBuilderCache(masterSb, $"{props.CacheKey()}_BuildSelect", sb =>
             {
@@ -796,13 +797,13 @@ namespace F4ST.Data.Dapper
                     sb.Append(GetColumnName(property));
                     //if there is a custom column name add an "as customcolumnname" to the item so it maps properly
                     if (property.GetCustomAttributes(true).SingleOrDefault(attr => attr.GetType().Name == typeof(ColumnAttribute).Name) != null)
-                        sb.Append(" as " + Encapsulate(property.Name));
+                        sb.Append(" as " + TypeExtension.Encapsulate(_encapsulation, property.Name));
                     addedAny = true;
                 }
             });
         }
 
-        private static void BuildWhere<TEntity>(StringBuilder sb, IEnumerable<PropertyInfo> idProps, object whereConditions = null)
+        private void BuildWhere<TEntity>(StringBuilder sb, IEnumerable<PropertyInfo> idProps, object whereConditions = null)
         {
             var propertyInfos = idProps.ToArray();
             for (var i = 0; i < propertyInfos.Count(); i++)
@@ -810,7 +811,7 @@ namespace F4ST.Data.Dapper
                 var useIsNull = false;
 
                 //match up generic properties to source entity properties to allow fetching of the column attribute
-                //the anonymous object used for search doesn't have the custom attributes attached to them so this allows us to build the correct where clause
+                //the anonymous object used for search doesn't have the custom attributes attached to them so allows us to build the correct where clause
                 //by converting the model type to the database column name via the column attribute
                 var propertyToUse = propertyInfos.ElementAt(i);
                 var sourceProperties = GetScaffoldableProperties<TEntity>().ToArray();
@@ -842,7 +843,7 @@ namespace F4ST.Data.Dapper
         //Not marked with the [Key] attribute (without required attribute)
         //Not marked with [IgnoreInsert]
         //Not marked with [NotMapped]
-        private static void BuildInsertValues<T>(StringBuilder masterSb)
+        private void BuildInsertValues<T>(StringBuilder masterSb)
         {
             StringBuilderCache(masterSb, $"{typeof(T).FullName}_BuildInsertValues", sb =>
             {
@@ -878,7 +879,7 @@ namespace F4ST.Data.Dapper
         //marked with [IgnoreInsert]
         //named Id
         //marked with [NotMapped]
-        private static void BuildInsertParameters<T>(StringBuilder masterSb)
+        private void BuildInsertParameters<T>(StringBuilder masterSb)
         {
             StringBuilderCache(masterSb, $"{typeof(T).FullName}_BuildInsertParameters", sb =>
             {
@@ -908,14 +909,14 @@ namespace F4ST.Data.Dapper
         }
 
         //Get all properties in an entity
-        private static IEnumerable<PropertyInfo> GetAllProperties<T>(T entity) where T : class
+        private IEnumerable<PropertyInfo> GetAllProperties<T>(T entity) where T : class
         {
             if (entity == null) return new PropertyInfo[0];
             return entity.GetType().GetProperties();
         }
 
         //Get all properties that are not decorated with the Editable(false) attribute
-        private static IEnumerable<PropertyInfo> GetScaffoldableProperties<T>()
+        private IEnumerable<PropertyInfo> GetScaffoldableProperties<T>()
         {
             IEnumerable<PropertyInfo> props = typeof(T).GetProperties();
 
@@ -927,8 +928,8 @@ namespace F4ST.Data.Dapper
 
         //Determine if the Attribute has an AllowEdit key and return its boolean state
         //fake the funk and try to mimic EditableAttribute in System.ComponentModel.DataAnnotations 
-        //This allows use of the DataAnnotations property in the model and have the SimpleCRUD engine just figure it out without a reference
-        private static bool IsEditable(PropertyInfo pi)
+        //allows use of the DataAnnotations property in the model and have the SimpleCRUD engine just figure it out without a reference
+        private bool IsEditable(PropertyInfo pi)
         {
             var attributes = pi.GetCustomAttributes(false);
             if (attributes.Length > 0)
@@ -945,8 +946,8 @@ namespace F4ST.Data.Dapper
 
         //Determine if the Attribute has an IsReadOnly key and return its boolean state
         //fake the funk and try to mimic ReadOnlyAttribute in System.ComponentModel 
-        //This allows use of the DataAnnotations property in the model and have the SimpleCRUD engine just figure it out without a reference
-        private static bool IsReadOnly(PropertyInfo pi)
+        //allows use of the DataAnnotations property in the model and have the SimpleCRUD engine just figure it out without a reference
+        private bool IsReadOnly(PropertyInfo pi)
         {
             var attributes = pi.GetCustomAttributes(false);
             if (attributes.Length > 0)
@@ -966,7 +967,7 @@ namespace F4ST.Data.Dapper
         //Not marked ReadOnly
         //Not marked IgnoreInsert
         //Not marked NotMapped
-        private static IEnumerable<PropertyInfo> GetUpdateableProperties<T>(T entity)
+        private IEnumerable<PropertyInfo> GetUpdateableProperties<T>(T entity)
         {
             var updateableProperties = GetScaffoldableProperties<T>();
             //remove ones with ID
@@ -984,72 +985,68 @@ namespace F4ST.Data.Dapper
         }
 
         //Get all properties that are named Id or have the Key attribute
-        //For Inserts and updates we have a whole entity so this method is used
-        private static IEnumerable<PropertyInfo> GetIdProperties(object entity)
+        //For Inserts and updates we have a whole entity so method is used
+        private IEnumerable<PropertyInfo> GetIdProperties(object entity)
         {
             var type = entity.GetType();
             return GetIdProperties(type);
         }
 
         //Get all properties that are named Id or have the Key attribute
-        //For Get(id) and Delete(id) we don't have an entity, just the type so this method is used
-        private static IEnumerable<PropertyInfo> GetIdProperties(Type type)
+        //For Get(id) and Delete(id) we don't have an entity, just the type so method is used
+        private IEnumerable<PropertyInfo> GetIdProperties(Type type)
         {
             var tp = type.GetProperties().Where(p => p.GetCustomAttributes(true).Any(attr => attr.GetType().Name == typeof(KeyAttribute).Name)).ToList();
             return tp.Any() ? tp : type.GetProperties().Where(p => p.Name.Equals("Id", StringComparison.OrdinalIgnoreCase));
         }
 
-        //Gets the table name for this entity
-        //For Inserts and updates we have a whole entity so this method is used
+        //Gets the table name for entity
+        //For Inserts and updates we have a whole entity so method is used
         //Uses class name by default and overrides if the class has a Table attribute
-        private static string GetTableName(object entity)
+        private string GetTableName(object entity)
         {
             var type = entity.GetType();
             return GetTableName(type);
         }
 
-        //Gets the table name for this type
-        //For Get(id) and Delete(id) we don't have an entity, just the type so this method is used
+        //Gets the table name for type
+        //For Get(id) and Delete(id) we don't have an entity, just the type so method is used
         //Use dynamic type to be able to handle both our Table-attribute and the DataAnnotation
         //Uses class name by default and overrides if the class has a Table attribute
-        private static string GetTableName(Type type)
+        private string GetTableName(Type type)
         {
             string tableName;
 
             if (TableNames.TryGetValue(type, out tableName))
                 return tableName;
 
-            tableName = _tableNameResolver.ResolveTableName(type);
+            tableName = _tableNameResolver.ResolveTableName(_encapsulation, type);
 
             TableNames.AddOrUpdate(type, tableName, (t, v) => tableName);
 
             return tableName;
         }
 
-        private static string GetColumnName(PropertyInfo propertyInfo)
+        private string GetColumnName(PropertyInfo propertyInfo)
         {
-            string columnName, key = string.Format("{0}.{1}", propertyInfo.DeclaringType, propertyInfo.Name);
+            string columnName, key = $"{propertyInfo.DeclaringType}.{propertyInfo.Name}";
 
             if (ColumnNames.TryGetValue(key, out columnName))
                 return columnName;
 
-            columnName = _columnNameResolver.ResolveColumnName(propertyInfo);
+            columnName = _columnNameResolver.ResolveColumnName(_encapsulation, propertyInfo);
 
             ColumnNames.AddOrUpdate(key, columnName, (t, v) => columnName);
 
             return columnName;
         }
 
-        private static string Encapsulate(string databaseword)
-        {
-            return string.Format(_encapsulation, databaseword);
-        }
         /// <summary>
         /// Generates a GUID based on the current date/time
         /// http://stackoverflow.com/questions/1752004/sequential-guid-generator-c-sharp
         /// </summary>
         /// <returns></returns>
-        public static Guid SequentialGuid()
+        public Guid SequentialGuid()
         {
             var tempGuid = Guid.NewGuid();
             var bytes = tempGuid.ToByteArray();
@@ -1065,35 +1062,35 @@ namespace F4ST.Data.Dapper
 
         public interface ITableNameResolver
         {
-            string ResolveTableName(Type type);
+            string ResolveTableName(string encapsulation, Type type);
         }
 
         public interface IColumnNameResolver
         {
-            string ResolveColumnName(PropertyInfo propertyInfo);
+            string ResolveColumnName(string encapsulation, PropertyInfo propertyInfo);
         }
 
         public class TableNameResolver : ITableNameResolver
         {
-            public virtual string ResolveTableName(Type type)
+            public virtual string ResolveTableName(string encapsulation, Type type)
             {
-                var tableName = Encapsulate(type.Name);
+                var tableName = TypeExtension.Encapsulate(encapsulation, type.Name);
 
                 var tableattr = type.GetCustomAttributes(true).SingleOrDefault(attr => attr.GetType().Name == typeof(TableAttribute).Name) as dynamic;
                 if (tableattr != null)
                 {
-                    tableName = Encapsulate(tableattr.Name);
+                    tableName = TypeExtension.Encapsulate(encapsulation, tableattr.Name);
                     try
                     {
                         if (!String.IsNullOrEmpty(tableattr.Schema))
                         {
-                            string schemaName = Encapsulate(tableattr.Schema);
-                            tableName = String.Format("{0}.{1}", schemaName, tableName);
+                            string schemaName = TypeExtension.Encapsulate(encapsulation, tableattr.Schema);
+                            tableName = $"{schemaName}.{tableName}";
                         }
                     }
                     catch (RuntimeBinderException)
                     {
-                        //Schema doesn't exist on this attribute.
+                        //Schema doesn't exist on attribute.
                     }
                 }
 
@@ -1103,16 +1100,16 @@ namespace F4ST.Data.Dapper
 
         public class ColumnNameResolver : IColumnNameResolver
         {
-            public virtual string ResolveColumnName(PropertyInfo propertyInfo)
+            public virtual string ResolveColumnName(string encapsulation, PropertyInfo propertyInfo)
             {
-                var columnName = Encapsulate(propertyInfo.Name);
+                var columnName = TypeExtension.Encapsulate(encapsulation, propertyInfo.Name);
 
                 var columnattr = propertyInfo.GetCustomAttributes(true).SingleOrDefault(attr => attr.GetType().Name == typeof(ColumnAttribute).Name) as dynamic;
                 if (columnattr != null)
                 {
-                    columnName = Encapsulate(columnattr.Name);
+                    columnName = TypeExtension.Encapsulate(encapsulation, columnattr.Name);
                     if (Debugger.IsAttached)
-                        Trace.WriteLine(String.Format("Column name for type overridden from {0} to {1}", propertyInfo.Name, columnName));
+                        Trace.WriteLine($"Column name for type overridden from {propertyInfo.Name} to {columnName}");
                 }
                 return columnName;
             }
@@ -1183,7 +1180,7 @@ namespace F4ST.Data.Dapper
             AllowEdit = iseditable;
         }
         /// <summary>
-        /// Does this property persist to the database?
+        /// Does property persist to the database?
         /// </summary>
         public bool AllowEdit { get; private set; }
     }
@@ -1204,7 +1201,7 @@ namespace F4ST.Data.Dapper
             IsReadOnly = isReadOnly;
         }
         /// <summary>
-        /// Does this property persist to the database?
+        /// Does property persist to the database?
         /// </summary>
         public bool IsReadOnly { get; private set; }
     }
@@ -1281,4 +1278,10 @@ internal static class TypeExtension
     {
         return string.Join(",", props.Select(p => p.DeclaringType.FullName + "." + p.Name).ToArray());
     }
+
+    public static string Encapsulate(string encapsulation, string databaseword)
+    {
+        return string.Format(encapsulation, databaseword);
+    }
+
 }
