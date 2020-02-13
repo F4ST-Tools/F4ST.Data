@@ -20,6 +20,8 @@ namespace F4ST.Data
             LoadDbProviders(container);
         }
 
+        public int Priority => -89;
+
         private void LoadDbProviders(WindsorContainer container)
         {
             var providers = Globals.GetImplementedInterfaceOf<IDbProvider>().ToArray();

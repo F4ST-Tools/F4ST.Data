@@ -7,6 +7,8 @@ namespace F4ST.Data.Dapper.MySQL
 {
     public class MySqlInstaller : IIoCInstaller
     {
+        public int Priority => -88;
+
         public void Install(WindsorContainer container, IMapper mapper)
         {
             container.Register(Component
@@ -15,5 +17,6 @@ namespace F4ST.Data.Dapper.MySQL
                 .Named("Dapper.MySQL")
                 .LifestyleTransient());
         }
+
     }
 }

@@ -7,6 +7,7 @@ namespace F4ST.Data.Dapper.PostgreSQL
 {
     public class PostgreSqlInstaller : IIoCInstaller
     {
+        public int Priority => -88;
         public void Install(WindsorContainer container, IMapper mapper)
         {
             container.Register(Component

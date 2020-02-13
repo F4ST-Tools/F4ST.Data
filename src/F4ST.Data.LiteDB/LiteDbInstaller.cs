@@ -6,6 +6,7 @@ namespace F4ST.Data.LiteDB
 {
     public class LiteDbInstaller : IIoCInstaller
     {
+        public int Priority => -88;
         public void Install(WindsorContainer container, IMapper mapper)
         {
 

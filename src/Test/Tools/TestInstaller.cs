@@ -8,6 +8,7 @@ namespace Test.Tools
 {
     public class TestInstaller : IIoCInstaller
     {
+        public int Priority => 10;
         public void Install(WindsorContainer container, IMapper mapper)
         {
         }

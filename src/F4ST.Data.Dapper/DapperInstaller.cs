@@ -6,6 +6,7 @@ namespace F4ST.Data.Dapper
 {
     public class DapperInstaller : IIoCInstaller
     {
+        public int Priority => -88;
         public void Install(WindsorContainer container, IMapper mapper)
         {
 
