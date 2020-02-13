@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="F4ST.Data" Version="1.1.3" />
+    <PackageReference Include="F4ST.Data" Version="1.1.8" />
     <PackageReference Include="Dapper" Version="2.0.30" />
   </ItemGroup>
 

@@ -5,11 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="F4ST.Data" Version="1.1.3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\F4ST.Data.Dapper.SQLServer\F4ST.Data.Dapper.SQLServer.csproj" />
+    <ProjectReference Include="..\F4ST.Data.RavenDB\F4ST.Data.RavenDB.csproj" />
+    <ProjectReference Include="..\F4ST.Data\F4ST.Data.csproj" />
   </ItemGroup>
 
 </Project>

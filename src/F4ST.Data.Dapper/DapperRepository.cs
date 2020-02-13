@@ -20,7 +20,7 @@ namespace F4ST.Data.Dapper
 
         public DapperRepository(DbConnectionModel config)
         {
-            
+
             string provider;
             Dialect dialect;
             switch (((config as DapperConnectionConfig)?.Provider.ToLower()))
@@ -44,7 +44,7 @@ namespace F4ST.Data.Dapper
                     break;
             }
 
-            var connection = IoC.Resolve<IDapperConnection>(provider, new{ dbConnection = config});
+            var connection = IoC.Resolve<IDapperConnection>(provider, new { dbConnection = config });
 
             _dapper = new DapperFramework(dialect);
             _connection = connection.Connection;
@@ -102,14 +102,14 @@ namespace F4ST.Data.Dapper
 
         /// <inheritdoc />
         public Task<T> Get<T>(object id, CancellationToken cancellationToken = default)
-            where T : DbEntity
+            where T : BaseEntity
         {
             return _dapper.GetAsync<T>(_connection, id, _transaction, Timeout, cancellationToken);
         }
 
         /// <inheritdoc />
         public async Task<IEnumerable<T>> Get<T>(IEnumerable<object> ids, CancellationToken cancellationToken = default)
-            where T : DbEntity
+            where T : BaseEntity
         {
             //todo: must be change for better performance
             var res = new List<T>();
@@ -123,8 +123,8 @@ namespace F4ST.Data.Dapper
 
         public async Task<T> Get<T, TIncType>(object id, Expression<Func<T, string>> field,
             Expression<Func<T, TIncType>> targetField, CancellationToken cancellationToken = default)
-            where T : DbEntity
-            where TIncType : DbEntity
+            where T : BaseEntity
+            where TIncType : BaseEntity
         {
             var res = await Get<T>(id, cancellationToken);
 
@@ -142,9 +142,9 @@ namespace F4ST.Data.Dapper
         public async Task<T> Get<T, TIncType1, TIncType2>(string id, Expression<Func<T, string>> field1,
             Expression<Func<T, TIncType1>> targetField1, Expression<Func<T, string>> field2,
             Expression<Func<T, TIncType2>> targetField2, CancellationToken cancellationToken = default)
-            where T : DbEntity
-            where TIncType1 : DbEntity
-            where TIncType2 : DbEntity
+            where T : BaseEntity
+            where TIncType1 : BaseEntity
+            where TIncType2 : BaseEntity
         {
             var res = await Get<T>(id, cancellationToken);
 
@@ -162,14 +162,14 @@ namespace F4ST.Data.Dapper
         #region Insert
 
         /// <inheritdoc />
-        public Task Add<T>(T entity, CancellationToken cancellationToken = default) where T : DbEntity
+        public Task Add<T>(T entity, CancellationToken cancellationToken = default) where T : BaseEntity
         {
             return _dapper.InsertAsync(_connection, entity, _transaction, Timeout, cancellationToken);
         }
 
         /// <inheritdoc />
         public async Task Add<T>(IEnumerable<T> entities)
-            where T : DbEntity
+            where T : BaseEntity
         {
             var addList = entities
                 .Select(entity => Add(entity));
@@ -181,7 +181,7 @@ namespace F4ST.Data.Dapper
         #region Update
 
         /// <inheritdoc />
-        public Task Update<T>(T entity, CancellationToken cancellationToken = default) where T : DbEntity
+        public Task Update<T>(T entity, CancellationToken cancellationToken = default) where T : BaseEntity
         {
             entity.ModifiedOn = DateTime.Now;
             return _dapper.UpdateAsync(_connection, entity, _transaction, Timeout, cancellationToken);
@@ -189,7 +189,7 @@ namespace F4ST.Data.Dapper
 
         /// <inheritdoc />
         public async Task Update<T>(IEnumerable<T> entities)
-            where T : DbEntity
+            where T : BaseEntity
         {
             var updateList = entities
                 .Select(entity => Update(entity));
@@ -198,7 +198,7 @@ namespace F4ST.Data.Dapper
 
         /// <inheritdoc />
         public Task Update<T, TField>(T entity, Expression<Func<T, TField>> field, TField value,
-            CancellationToken cancellationToken = default) where T : DbEntity
+            CancellationToken cancellationToken = default) where T : BaseEntity
         {
             entity.SetPropertyValue(field, value);
             return Update(entity, cancellationToken);
@@ -206,7 +206,7 @@ namespace F4ST.Data.Dapper
 
         /// <inheritdoc />
         public async Task Update<T, TField>(Expression<Func<T, bool>> filter, Expression<Func<T, TField>> field, TField value,
-            CancellationToken cancellationToken = default) where T : DbEntity
+            CancellationToken cancellationToken = default) where T : BaseEntity
         {
             //todo: must check for work
             var tran = new ExprToQueryTranslator();
@@ -229,21 +229,21 @@ namespace F4ST.Data.Dapper
 
         /// <inheritdoc />
         public void Delete<T>(object id)
-            where T : DbEntity
+            where T : BaseEntity
         {
             _dapper.Delete<T>(_connection, id, _transaction, Timeout);
         }
 
         /// <inheritdoc />
         public Task Delete<T>(T entity, CancellationToken cancellationToken = default)
-            where T : DbEntity
+            where T : BaseEntity
         {
             return _dapper.DeleteAsync(_connection, entity, _transaction, Timeout, cancellationToken);
         }
 
         /// <inheritdoc />
         public Task Delete<T>(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
-            where T : DbEntity
+            where T : BaseEntity
         {
             //todo: must check for work
             var tran = new ExprToQueryTranslator();
@@ -254,7 +254,7 @@ namespace F4ST.Data.Dapper
         }
 
         /// <inheritdoc />
-        public Task DeleteAll<T>(CancellationToken cancellationToken = default) where T : DbEntity
+        public Task DeleteAll<T>(CancellationToken cancellationToken = default) where T : BaseEntity
         {
             return _dapper.DeleteListAsync<T>(_connection, new { }, _transaction, Timeout, cancellationToken);
         }
@@ -265,7 +265,7 @@ namespace F4ST.Data.Dapper
 
         /// <inheritdoc />
         public Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
-            where T : DbEntity
+            where T : BaseEntity
         {
             //todo: must check for work
             var tran = new ExprToQueryTranslator();
@@ -278,29 +278,36 @@ namespace F4ST.Data.Dapper
         /// <inheritdoc />
         public Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter,
             Expression<Func<T, object>> order, int pageIndex, int size, CancellationToken cancellationToken = default)
-            where T : DbEntity
+            where T : BaseEntity
         {
             return Find(filter, order, pageIndex, size, false, cancellationToken);
         }
 
         /// <inheritdoc />
         public Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, int pageIndex, int size, CancellationToken cancellationToken = default)
-            where T : DbEntity
+            where T : BaseEntity
         {
-            return Find(filter, f => f.Id, pageIndex, size, cancellationToken);
+            return Find(filter, "Id", pageIndex, size, false, cancellationToken);
         }
 
         /// <inheritdoc />
         public Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> order, int pageIndex,
             int size, bool isDescending, CancellationToken cancellationToken = default)
-            where T : DbEntity
+            where T : BaseEntity
+        {
+            return Find(filter, order.Name, pageIndex, size, isDescending, cancellationToken);
+        }
+
+        private Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, string order, int pageIndex,
+            int size, bool isDescending, CancellationToken cancellationToken = default)
+            where T : BaseEntity
         {
             //todo: must check for work
             var tran = new ExprToQueryTranslator();
             var where = tran.Translate(filter);
             Debugger.Break();
 
-            var orderBy = $"{order.Name} ";
+            var orderBy = $"{order} ";
             orderBy += !isDescending ? "asc" : "desc";
 
             return _dapper.GetListPagedAsync<T>(_connection, pageIndex, size, where, orderBy, null, _transaction, Timeout, cancellationToken);
@@ -311,14 +318,14 @@ namespace F4ST.Data.Dapper
         #region Util
 
         /// <inheritdoc />
-        public async Task<long> Count<T>(CancellationToken cancellationToken = default) where T : DbEntity
+        public async Task<long> Count<T>(CancellationToken cancellationToken = default) where T : BaseEntity
         {
             return await _dapper.RecordCountAsync<T>(_connection, cancellationToken: cancellationToken);
         }
 
         /// <inheritdoc />
         public async Task<long> Count<T>(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
-            where T : DbEntity
+            where T : BaseEntity
         {
             //todo: must check for work
             var tran = new ExprToQueryTranslator();
@@ -329,14 +336,14 @@ namespace F4ST.Data.Dapper
         }
 
         /// <inheritdoc />
-        public async Task<bool> Any<T>(CancellationToken cancellationToken = default) where T : DbEntity
+        public async Task<bool> Any<T>(CancellationToken cancellationToken = default) where T : BaseEntity
         {
             return await Count<T>(cancellationToken) > 0;
         }
 
         /// <inheritdoc />
         public async Task<bool> Any<T>(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
-            where T : DbEntity
+            where T : BaseEntity
         {
             return await Count(filter, cancellationToken) > 0;
         }
@@ -347,28 +354,28 @@ namespace F4ST.Data.Dapper
 
         /// <inheritdoc />
         public Task<T> Max<T>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> field,
-            CancellationToken cancellationToken = default) where T : DbEntity
+            CancellationToken cancellationToken = default) where T : BaseEntity
         {
             throw new NotImplementedException();
         }
 
         /// <inheritdoc />
         public Task<T> Max<T>(Expression<Func<T, object>> field, CancellationToken cancellationToken = default)
-            where T : DbEntity
+            where T : BaseEntity
         {
             throw new NotImplementedException();
         }
 
         /// <inheritdoc />
         public Task<T> Min<T>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> field,
-            CancellationToken cancellationToken = default) where T : DbEntity
+            CancellationToken cancellationToken = default) where T : BaseEntity
         {
             throw new NotImplementedException();
         }
 
         /// <inheritdoc />
         public Task<T> Min<T>(Expression<Func<T, object>> field, CancellationToken cancellationToken = default)
-            where T : DbEntity
+            where T : BaseEntity
         {
             throw new NotImplementedException();
         }
