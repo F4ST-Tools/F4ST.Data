@@ -1,5 +1,4 @@
-﻿
-
+﻿using F4ST.Common.Containers;
 using F4ST.Data;
 using LiteDB;
 
@@ -7,17 +6,14 @@ namespace F4ST.Data.LiteDB
 {
     public class LiteDbConnection : ILiteDbConnection
     {
-        private static LiteDatabase _connection = null;
-        public LiteDatabase Connection => _connection;
+        public LiteDatabase Connection { get; }
 
-        public LiteDbConnection(/*IAppSetting appSetting*/ DbConnectionModel dbConnection)
+        public LiteDbConnection(DbConnectionModel dbConnection)
         {
-            if (_connection != null)
-                return;
-
+            //var dbConnection = IoC.Resolve<DbConnectionModel>("");
             var config = dbConnection as LiteDbConnectionConfig;
 
-            _connection = new LiteDatabase(config.ConnectionString);
+            Connection = new LiteDatabase(config.ConnectionString);
         }
 
         public void Dispose()

@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
+using F4ST.Common.Containers;
 using F4ST.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Raven.Client.Documents.Subscriptions;
 using Test.Data;
 using Test.Models;
 
@@ -15,31 +13,40 @@ namespace Test.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly IRepository _repository;
+        private readonly IServiceProvider _provider;
 
-        public HomeController(ILogger<HomeController> logger, IRepository repository)
+        public HomeController(ILogger<HomeController> logger, IServiceProvider provider)
         {
             _logger = logger;
-            _repository = repository;
+            _provider = provider;
         }
 
         public async Task<IActionResult> Index()
         {
-            var count =await _repository.Count<TestEntity>();
-
-            if (count == 0)
+            using (var rep = _provider.GetRepository("RavenDB"))
             {
-                var item=new TestEntity()
+                //var count = await rep.Count<TestEntity>();
+
+                //if (count == 0)
                 {
-                    Name = "test",
-                    Family = "test"
-                };
+                    var item = new TestEntity()
+                    {
+                        Name = "test",
+                        Family = "test"
+                    };
 
-                await _repository.Add(item);
-                await _repository.SaveChanges();
+                    await rep.Add(item);
+                    await rep.SaveChanges();
+
+                    item.Family = "test 2";
+                    await rep.Update(item);
+                    await rep.SaveChanges();
+                }
+
+
+
+                var items = await rep.Find<TestEntity>(t => t.Name == "test");
             }
-
-            var items =await _repository.Find<TestEntity>(t => t.Name=="test");
 
             return View();
         }

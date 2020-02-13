@@ -19,6 +19,5 @@ namespace F4ST.Data
         /// </summary>
         Type GetRepository { get; }
 
-        void Init();
     }
 }

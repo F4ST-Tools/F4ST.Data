@@ -1,38 +1,51 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
 using F4ST.Common.Containers;
+using F4ST.Common.Extensions;
 using F4ST.Common.Mappers;
 using F4ST.Common.Tools;
+using Microsoft.Extensions.Configuration;
 
 namespace F4ST.Data
 {
     public class DataInstaller : IIoCInstaller
     {
+        internal static readonly Dictionary<string, DbConnectionModel> ConnectionModels = new Dictionary<string, DbConnectionModel>();
+
         public void Install(WindsorContainer container, IMapper mapper)
         {
-            var appSetting = IoC.Resolve<IAppSetting>();
-            var config = appSetting.Get<DbConnectionModel>("DbConnection");
-
-            LoadDbProviders(container, config, appSetting);
+            LoadDbProviders(container);
         }
 
-        private void LoadDbProviders(WindsorContainer container, DbConnectionModel config, IAppSetting appSetting)
+        public int Priority => -89;
+
+        private void LoadDbProviders(WindsorContainer container)
         {
-            var providers = Globals.GetImplementedInterfaceOf<IDbProvider>();
+            var providers = Globals.GetImplementedInterfaceOf<IDbProvider>().ToArray();
 
-            var provider = providers.FirstOrDefault(p =>
-                string.Equals(p.Key, config.Provider, StringComparison.CurrentCultureIgnoreCase));
+            var conf = IoC.Resolve<IConfiguration>();
+            var configs = conf.GetSection("DbConnection").GetChildren();
 
-            if (provider == null)
-                throw new Exception("Provider not found");
+            foreach (var config in configs)
+            {
+                var cc = config.Get(typeof(DbConnectionModel)) as DbConnectionModel;
+                var provider = providers.FirstOrDefault(p =>
+                    string.Equals(p.Key, cc.Provider, StringComparison.CurrentCultureIgnoreCase));
 
-            config = appSetting.Get(provider.GetConnectionModel, "DbConnection", true) as DbConnectionModel;
-            container.Register(Component.For<IRepository>().ImplementedBy(provider.GetRepository).LifestyleTransient());
-            container.Register(Component.For<DbConnectionModel>().Instance(config).LifestyleSingleton());
+                if (provider == null)
+                    throw new Exception("Provider not found");
 
-            provider.Init();
+                ConnectionModels.Add(cc.Name, config.Get(provider.GetConnectionModel) as DbConnectionModel);
+
+                container.Register(Component
+                    .For<IRepository>()
+                    .ImplementedBy(provider.GetRepository)
+                    .Named($"Rep_{cc.Name}")
+                    .LifestyleTransient());
+            }
         }
 
     }

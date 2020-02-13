@@ -5,12 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="F4ST.Common" Version="1.0.10" />
-    <PackageReference Include="F4ST.Data" Version="1.0.1" />
-    <PackageReference Include="F4ST.Data.Dapper" Version="1.0.0" />
-    <PackageReference Include="F4ST.Data.Dapper.SQLServer" Version="1.0.0" />
-    <PackageReference Include="F4ST.Data.LiteDB" Version="1.0.2" />
-    <PackageReference Include="F4ST.Data.RavenDB" Version="1.0.1" />
+    <ProjectReference Include="..\F4ST.Data.RavenDB\F4ST.Data.RavenDB.csproj" />
+    <ProjectReference Include="..\F4ST.Data\F4ST.Data.csproj" />
   </ItemGroup>
 
 </Project>

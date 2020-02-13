@@ -11,12 +11,11 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageDescription>Dapper database functionality for F4ST</PackageDescription>
     <RepositoryUrl>https://github.com/nRafinia/F4ST.Data</RepositoryUrl>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>  
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>  
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="F4ST.Common" Version="1.0.10" />
-    <PackageReference Include="F4ST.Data" Version="1.0.1" />
+    <PackageReference Include="F4ST.Data" Version="1.1.8" />
     <PackageReference Include="Dapper" Version="2.0.30" />
   </ItemGroup>
 
