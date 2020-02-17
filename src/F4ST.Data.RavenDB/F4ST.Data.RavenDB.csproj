@@ -4,9 +4,9 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <Description>RavenDB functionality for F4ST</Description>
     <Product>F4ST</Product>
-    <version>1.1.2</version>
+    <version>1.1.3</version>
     <Authors>https://github.com/nRafinia</Authors>
-    <Company>https://github.com/nRafinia/F4ST.Common</Company>
+    <Company>https://github.com/F4ST-Tools</Company>
     <License>https://opensource.org/licenses/AGPL-3.0</License>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageDescription>RavenDB functionality for F4ST</PackageDescription>
