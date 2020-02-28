@@ -1,7 +1,7 @@
 ﻿
 namespace F4ST.Data.RavenDB
 {
-    public class RavenDbEntity : BaseEntity
+    public class BaseDbEntity : BaseEntity
     {
         /// <summary>
         /// Id

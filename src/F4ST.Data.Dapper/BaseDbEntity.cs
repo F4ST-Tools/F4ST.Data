@@ -1,7 +1,7 @@
 ﻿
-namespace F4ST.Data.Dapper.SQLServer
+namespace F4ST.Data.Dapper
 {
-    public class SqlServerDbEntity : BaseEntity
+    public class BaseDbEntity : BaseEntity
     {
         /// <summary>
         /// Id
