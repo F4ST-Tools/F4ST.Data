@@ -3,10 +3,20 @@ using F4ST.Data.RavenDB;
 
 namespace Test.Data
 {
-    [Table("TestT")]
+    [Table("Banks")]
     public class TestEntity : BaseDbEntity
     {
-        public string Name { get; set; }
-        public string Family { get; set; }
+        /// <summary>
+        /// کد کشور
+        /// </summary>
+        public int? CountryId { get; set; }
+        /// <summary>
+        /// عنوان بانک
+        /// </summary>
+        public string BankTitle { get; set; }
+        /// <summary>
+        /// فعال/غیرفعال
+        /// </summary>
+        public bool? IsActive { get; set; }
     }
 }

@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Text;
 
-namespace F4ST.Data.Dapper
+namespace F4ST.Data.Dapper.Helpers
 {
     /// <summary>
     /// Enables the partial evaluation of queries.

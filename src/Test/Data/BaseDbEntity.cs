@@ -1,8 +1,9 @@
-﻿using F4ST.Data.RavenDB;
+﻿using F4ST.Data.Dapper.SQLServer;
+using F4ST.Data.RavenDB;
 
 namespace Test.Data
 {
-    public class BaseDbEntity : RavenDbEntity
+    public class BaseDbEntity : SqlServerDbEntity
     {
 
     }
