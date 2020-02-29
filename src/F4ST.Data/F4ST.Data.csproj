@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="F4ST.Common" Version="1.0.20" />
+    <PackageReference Include="F4ST.Common" Version="1.0.19" />
   </ItemGroup>
 
 </Project>
