@@ -5,7 +5,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>Database functionality for F4ST</Description>
     <Product>F4ST</Product>
-    <version>1.1.9</version>
+    <version>1.1.10</version>
     <Authors>https://github.com/nRafinia</Authors>
     <Company>https://github.com/nRafinia/F4ST.Common</Company>
     <License>https://opensource.org/licenses/AGPL-3.0</License>
