@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <Description>RavenDB functionality for F4ST</Description>
     <Product>F4ST</Product>
-    <version>1.1.4</version>
+    <version>1.1.5</version>
     <Authors>https://github.com/nRafinia</Authors>
     <Company>https://github.com/F4ST-Tools</Company>
     <License>https://opensource.org/licenses/AGPL-3.0</License>
@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="F4ST.Data" Version="1.1.8" />
+    <PackageReference Include="F4ST.Data" Version="1.1.10" />
     <PackageReference Include="RavenDB.Client" Version="4.2.8" />
   </ItemGroup>
 
