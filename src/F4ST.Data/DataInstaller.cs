@@ -29,10 +29,10 @@ namespace F4ST.Data
             var conf = IoC.Resolve<IConfiguration>();
             var configs = conf.GetSection("DbConnection").GetChildren();
 
-            foreach (var config in configs)
+            foreach (var config in configs ?? new List<IConfigurationSection>())
             {
                 var cc = config.Get(typeof(DbConnectionModel)) as DbConnectionModel;
-                var provider = providers.FirstOrDefault(p =>
+                var provider = providers?.FirstOrDefault(p =>
                     string.Equals(p.Key, cc.Provider, StringComparison.CurrentCultureIgnoreCase));
 
                 if (provider == null)

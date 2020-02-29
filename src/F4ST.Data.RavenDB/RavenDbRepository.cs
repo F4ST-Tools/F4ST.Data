@@ -219,7 +219,7 @@ namespace F4ST.Data.RavenDB
             var items = await _session.Query<T>().Where(filter, true).ToListAsync(cancellationToken);
             foreach (var item in items)
             {
-                Delete(item);
+                await Delete(item, cancellationToken);
             }
         }
 
@@ -230,7 +230,7 @@ namespace F4ST.Data.RavenDB
             var items = await _session.Query<T>().ToListAsync(cancellationToken);
             foreach (var item in items)
             {
-                Delete(item);
+                await Delete(item, cancellationToken);
             }
         }
 

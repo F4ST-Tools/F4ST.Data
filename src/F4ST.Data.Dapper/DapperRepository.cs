@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using F4ST.Common.Containers;
 using F4ST.Common.Extensions;
+using F4ST.Data.Dapper.Helpers;
 
 namespace F4ST.Data.Dapper
 {
@@ -49,7 +50,7 @@ namespace F4ST.Data.Dapper
             _dapper = new DapperFramework(dialect);
             _connection = connection.Connection;
             _connection.Open();
-            OpenTransaction();
+            //OpenTransaction();
         }
 
         public void Dispose()
@@ -209,11 +210,12 @@ namespace F4ST.Data.Dapper
             CancellationToken cancellationToken = default) where T : BaseEntity
         {
             //todo: must check for work
-            var tran = new ExprToQueryTranslator();
-            var where = tran.Translate(filter);
+            var tran = new QueryBuilder<T>();
+            tran.Evaluate(filter);
+            var where = tran.Sql;
             Debugger.Break();
 
-            var items = await _dapper.GetListAsync<T>(_connection, where, null, _transaction, Timeout, cancellationToken);
+            var items = await _dapper.GetListAsync<T>(_connection, where, tran.Parameters, _transaction, Timeout, cancellationToken);
             var dbItems = items as T[] ?? items.ToArray();
             foreach (var item in dbItems)
             {
@@ -246,11 +248,12 @@ namespace F4ST.Data.Dapper
             where T : BaseEntity
         {
             //todo: must check for work
-            var tran = new ExprToQueryTranslator();
-            var where = tran.Translate(filter);
+            var tran = new QueryBuilder<T>();
+            tran.Evaluate(filter);
+            var where = tran.Sql;
             Debugger.Break();
 
-            return _dapper.DeleteListAsync<T>(_connection, where, null, _transaction, Timeout, cancellationToken);
+            return _dapper.DeleteListAsync<T>(_connection, where, tran.Parameters, _transaction, Timeout, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -268,11 +271,12 @@ namespace F4ST.Data.Dapper
             where T : BaseEntity
         {
             //todo: must check for work
-            var tran = new ExprToQueryTranslator();
-            var where = tran.Translate(filter);
             Debugger.Break();
+            var tran = new QueryBuilder<T>();
+            tran.Evaluate(filter);
+            var where = tran.Sql;
 
-            return _dapper.GetListAsync<T>(_connection, where, null, _transaction, Timeout, cancellationToken);
+            return _dapper.GetListAsync<T>(_connection, where, tran.Parameters, _transaction, Timeout, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -303,14 +307,15 @@ namespace F4ST.Data.Dapper
             where T : BaseEntity
         {
             //todo: must check for work
-            var tran = new ExprToQueryTranslator();
-            var where = tran.Translate(filter);
             Debugger.Break();
+            var tran = new QueryBuilder<T>();
+            tran.Evaluate(filter);
+            var where = tran.Sql;
 
             var orderBy = $"{order} ";
             orderBy += !isDescending ? "asc" : "desc";
 
-            return _dapper.GetListPagedAsync<T>(_connection, pageIndex, size, where, orderBy, null, _transaction, Timeout, cancellationToken);
+            return _dapper.GetListPagedAsync<T>(_connection, pageIndex, size, where, orderBy, tran.Parameters, _transaction, Timeout, cancellationToken);
         }
 
         #endregion
@@ -328,11 +333,13 @@ namespace F4ST.Data.Dapper
             where T : BaseEntity
         {
             //todo: must check for work
-            var tran = new ExprToQueryTranslator();
-            var where = tran.Translate(filter);
+            var tran = new QueryBuilder<T>();
+            tran.Evaluate(filter);
+            var where = tran.Sql;
+
             Debugger.Break();
 
-            return await _dapper.RecordCountAsync<T>(_connection, where, null, _transaction, Timeout, cancellationToken);
+            return await _dapper.RecordCountAsync<T>(_connection, where, tran.Parameters, _transaction, Timeout, cancellationToken);
         }
 
         /// <inheritdoc />
