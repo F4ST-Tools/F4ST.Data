@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <Description>Dapper database functionality for F4ST</Description>
     <Product>F4ST</Product>
-    <version>1.2.0</version>
+    <version>1.2.2</version>
     <Authors>https://github.com/nRafinia</Authors>
     <Company>https://github.com/nRafinia/F4ST.Common</Company>
     <License>https://opensource.org/licenses/AGPL-3.0</License>
@@ -17,7 +17,7 @@
 
 
   <ItemGroup>
-    <PackageReference Include="F4ST.Data" Version="1.1.8" />
+    <PackageReference Include="F4ST.Data" Version="1.1.11" />
     <PackageReference Include="Dapper" Version="2.0.30" />
   </ItemGroup>
 
