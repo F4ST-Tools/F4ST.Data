@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <Description>Dapper SQL Server database functionality for F4ST</Description>
     <Product>F4ST</Product>
-    <version>1.2.2</version>
+    <version>1.2.4</version>
     <Authors>https://github.com/nRafinia</Authors>
     <Company>https://github.com/F4ST-Tools</Company>
     <License>https://opensource.org/licenses/AGPL-3.0</License>

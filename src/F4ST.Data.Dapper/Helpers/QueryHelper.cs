@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using F4ST.Data;
+using F4ST.Data.Dapper;
 
-namespace F4ST.Data.Dapper.Helpers
+namespace Dapper.Contrib.Linq2Dapper.Helpers
 {
     internal class QueryHelper
     {
@@ -24,7 +26,7 @@ namespace F4ST.Data.Dapper.Helpers
         {
             if (propertyList == null) return false;
             return ((exp is MemberExpression) &&
-                    (((MemberExpression)exp).Member.DeclaringType == declaringType) &&
+                    (((MemberExpression)exp).Member.DeclaringType == declaringType || declaringType.IsSubclassOf(((MemberExpression)exp).Member.DeclaringType)) &&
                     propertyList[(((MemberExpression)exp).Member.Name)] != null);
         }
 

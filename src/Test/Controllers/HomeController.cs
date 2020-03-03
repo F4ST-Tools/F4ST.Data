@@ -49,11 +49,11 @@ namespace Test.Controllers
                 var items = await rep.Find<TestEntity>(t => t.Name == "test");*/
                 var aa = 3;
 
-                Expression<Func<TestEntity, bool>> b = c => c.CountryId == aa;
+                var bb = "asd";
 
                 //var cc = ResolveMemberExpression(b);
 
-                var a=await rep.Find<TestEntity>(c => c.CountryId == aa);
+                var a=await rep.Find<TestEntity>(c => c.Id== 1 /*&& c.BankTitle.Contains(bb)*/);
 
             }
 

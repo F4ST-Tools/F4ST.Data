@@ -1,4 +1,4 @@
-﻿namespace F4ST.Data.Dapper.Helpers
+﻿namespace Dapper.Contrib.Linq2Dapper.Helpers
 {
     internal class MethodCall
     {

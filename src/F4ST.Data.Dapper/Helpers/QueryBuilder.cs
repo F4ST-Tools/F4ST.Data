@@ -2,9 +2,15 @@
 using System.Linq;
 using System.Linq.Expressions;
 using Dapper;
+using Dapper.Contrib.Linq2Dapper.Helpers;
 
-namespace F4ST.Data.Dapper.Helpers
+namespace Dapper.Contrib.Linq2Dapper
 {
+    /// <summary>
+    /// Reference: https://github.com/brentmannering/linq-to-dapper/
+    /// With sum change
+    /// </summary>
+
     internal class QueryBuilder<TData>: ExpressionVisitor
     {
         #region Fields

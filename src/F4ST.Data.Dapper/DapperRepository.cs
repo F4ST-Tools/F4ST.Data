@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Dapper.Contrib.Linq2Dapper;
 using F4ST.Common.Containers;
 using F4ST.Common.Extensions;
-using F4ST.Data.Dapper.Helpers;
 
 namespace F4ST.Data.Dapper
 {
@@ -276,6 +278,8 @@ namespace F4ST.Data.Dapper
             tran.Evaluate(filter);
             var where = tran.Sql;
 
+            //var aa = IQToolkit.ExpressionWriter.WriteToString(filter);
+
             return _dapper.GetListAsync<T>(_connection, where, tran.Parameters, _transaction, Timeout, cancellationToken);
         }
 
@@ -314,6 +318,7 @@ namespace F4ST.Data.Dapper
 
             var orderBy = $"{order} ";
             orderBy += !isDescending ? "asc" : "desc";
+
 
             return _dapper.GetListPagedAsync<T>(_connection, pageIndex, size, where, orderBy, tran.Parameters, _transaction, Timeout, cancellationToken);
         }

@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace F4ST.Data.Dapper.Helpers
+namespace Dapper.Contrib.Linq2Dapper.Helpers
 {
     internal static class CacheHelper
     {
