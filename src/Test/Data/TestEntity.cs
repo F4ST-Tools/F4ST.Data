@@ -1,5 +1,5 @@
 ﻿using F4ST.Data;
-using F4ST.Data.RavenDB;
+using F4ST.Data.Dapper;
 
 namespace Test.Data
 {

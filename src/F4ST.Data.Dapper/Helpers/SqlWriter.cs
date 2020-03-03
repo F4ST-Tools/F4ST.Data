@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 using System.Text;
 using Dapper;
 
-namespace F4ST.Data.Dapper.Helpers
+namespace Dapper.Contrib.Linq2Dapper.Helpers
 {
     internal class SqlWriter<TData>
     {
