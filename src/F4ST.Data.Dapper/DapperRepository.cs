@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -124,7 +125,7 @@ namespace F4ST.Data.Dapper
             return res;
         }
 
-        public async Task<T> Get<T, TIncType>(object id, Expression<Func<T, string>> field,
+        public async Task<T> Get<T, TIncType>(object id, Expression<Func<T, object>> field,
             Expression<Func<T, TIncType>> targetField, CancellationToken cancellationToken = default)
             where T : BaseEntity
             where TIncType : BaseEntity
@@ -142,8 +143,8 @@ namespace F4ST.Data.Dapper
         }
 
         /// <inheritdoc />
-        public async Task<T> Get<T, TIncType1, TIncType2>(string id, Expression<Func<T, string>> field1,
-            Expression<Func<T, TIncType1>> targetField1, Expression<Func<T, string>> field2,
+        public async Task<T> Get<T, TIncType1, TIncType2>(string id, Expression<Func<T, object>> field1,
+            Expression<Func<T, TIncType1>> targetField1, Expression<Func<T, object>> field2,
             Expression<Func<T, TIncType2>> targetField2, CancellationToken cancellationToken = default)
             where T : BaseEntity
             where TIncType1 : BaseEntity
@@ -272,13 +273,9 @@ namespace F4ST.Data.Dapper
         public Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
             where T : BaseEntity
         {
-            //todo: must check for work
-            Debugger.Break();
             var tran = new QueryBuilder<T>();
             tran.Evaluate(filter);
             var where = tran.Sql;
-
-            //var aa = IQToolkit.ExpressionWriter.WriteToString(filter);
 
             return _dapper.GetListAsync<T>(_connection, where, tran.Parameters, _transaction, Timeout, cancellationToken);
         }
@@ -292,6 +289,16 @@ namespace F4ST.Data.Dapper
         }
 
         /// <inheritdoc />
+        public Task<IEnumerable<T>> Find<T, TIncType>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> field,
+            Expression<Func<T, TIncType>> targetField,
+            Expression<Func<T, object>> order, int pageIndex, int size, CancellationToken cancellationToken = default)
+            where T : BaseEntity
+            where TIncType : BaseEntity
+        {
+            return Find(filter,field,targetField, order, pageIndex, size, false, cancellationToken);
+        }
+
+        /// <inheritdoc />
         public Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, int pageIndex, int size, CancellationToken cancellationToken = default)
             where T : BaseEntity
         {
@@ -299,19 +306,43 @@ namespace F4ST.Data.Dapper
         }
 
         /// <inheritdoc />
+        public Task<IEnumerable<T>> Find<T, TIncType>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> field,
+            Expression<Func<T, TIncType>> targetField,
+            int pageIndex, int size, CancellationToken cancellationToken = default)
+            where T : BaseEntity
+            where TIncType : BaseEntity
+        {
+            return Find(filter,field,targetField, "Id", pageIndex, size, false, cancellationToken);
+        }
+
+        /// <inheritdoc />
         public Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> order, int pageIndex,
             int size, bool isDescending, CancellationToken cancellationToken = default)
             where T : BaseEntity
         {
-            return Find(filter, order.Name, pageIndex, size, isDescending, cancellationToken);
+            var orderField = order.Name ?? order.PropertyName();
+            return Find(filter, orderField, pageIndex, size, isDescending, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public async Task<IEnumerable<T>> Find<T, TIncType>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> field,
+            Expression<Func<T, TIncType>> targetField,
+            Expression<Func<T, object>> order, int pageIndex, int size, bool isDescending,
+            CancellationToken cancellationToken = default)
+            where T : BaseEntity
+            where TIncType : BaseEntity
+        {
+            var orderField = order.Name ?? order.PropertyName();
+            var res = await Find(filter, field, targetField, orderField, pageIndex, size, isDescending,
+                cancellationToken);
+
+            return res;
         }
 
         private Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, string order, int pageIndex,
             int size, bool isDescending, CancellationToken cancellationToken = default)
             where T : BaseEntity
         {
-            //todo: must check for work
-            Debugger.Break();
             var tran = new QueryBuilder<T>();
             tran.Evaluate(filter);
             var where = tran.Sql;
@@ -321,6 +352,33 @@ namespace F4ST.Data.Dapper
 
 
             return _dapper.GetListPagedAsync<T>(_connection, pageIndex, size, where, orderBy, tran.Parameters, _transaction, Timeout, cancellationToken);
+        }
+
+     private async Task<IEnumerable<T>> Find<T, TIncType>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> field,
+            Expression<Func<T, TIncType>> targetField,
+            string order, int pageIndex, int size, bool isDescending, CancellationToken cancellationToken = default)
+            where T : BaseEntity
+            where TIncType : BaseEntity
+        {
+            var res = await Find<T>(filter, order, pageIndex, size, isDescending, cancellationToken);
+
+            var incFieldValues = res.Select(field.Compile()).ToList();
+
+            var tran = new QueryBuilder<T>();
+            tran.Evaluate(ObjectExt.GetExpression<TIncType>(c => incFieldValues.Contains((c as BaseDbEntity).Id)));
+            var where = tran.Sql;
+            where = where.Replace("WHERE", "WHERE Id");
+
+            var resInc = await _dapper.GetListAsync<TIncType>(_connection, where, tran.Parameters, _transaction, Timeout, cancellationToken);
+
+            foreach (var item in res)
+            {
+                var tValue = item.GetPropertyValue<T, int>(field.PropertyName());
+                var obj = resInc.FirstOrDefault(c => c.GetPropertyValue<TIncType, int>("Id") == tValue);
+                item.SetPropertyValue(targetField, obj);
+            }
+
+            return res;
         }
 
         #endregion

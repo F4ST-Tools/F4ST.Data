@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading.Tasks;
 using F4ST.Common.Containers;
 using F4ST.Data;
@@ -47,76 +48,24 @@ namespace Test.Controllers
                 }
                 
                 var items = await rep.Find<TestEntity>(t => t.Name == "test");*/
-                var aa = 3;
+                //var aa = 3;
 
-                var bb = "asd";
+                //var bb = "asd";
 
+                
                 //var cc = ResolveMemberExpression(b);
+                var items = new List<int>{1,2,4};
 
-                var a=await rep.Find<TestEntity>(c => c.Id== 1 /*&& c.BankTitle.Contains(bb)*/);
+                //var a=await rep.Find<TestEntity>(c => items.Contains(c.Id) /*&& c.BankTitle.Contains(bb)*/);
+                var b=await rep.Find<TestEntity, CountryEntity>(c => items.Contains(c.Id),c=>c.CountryId,
+                    c=>c.Country,o=>o.Id,1,10,false);
 
             }
 
             return View();
         }
 
-
-        private static KeyValuePair<Type, object>[] ResolveArgs<T>(Expression<Func<T, object>> expression)
-        {
-            var body = (System.Linq.Expressions.MethodCallExpression)expression.Body;
-            var values = new List<KeyValuePair<Type, object>>();
-
-            foreach (var argument in body.Arguments)
-            {
-                var exp = ResolveMemberExpression(argument);
-                var type = argument.Type;
-
-                var value = GetValue(exp);
-
-                values.Add(new KeyValuePair<Type, object>(type, value));
-            }
-
-            return values.ToArray();
-        }
-
-        public static MemberExpression ResolveMemberExpression(Expression expression)
-        {
-
-            if (expression is MemberExpression)
-            {
-                return (MemberExpression)expression;
-            }
-            else if (expression is UnaryExpression)
-            {
-                // if casting is involved, Expression is not x => x.FieldName but x => Convert(x.Fieldname)
-                return (MemberExpression)((UnaryExpression)expression).Operand;
-            }
-            else
-            {
-                throw new NotSupportedException(expression.ToString());
-            }
-        }
-
-        private static object GetValue(MemberExpression exp)
-        {
-            // expression is ConstantExpression or FieldExpression
-            if (exp.Expression is ConstantExpression)
-            {
-                return (((ConstantExpression)exp.Expression).Value)
-                    .GetType()
-                    .GetField(exp.Member.Name)
-                    .GetValue(((ConstantExpression)exp.Expression).Value);
-            }
-            else if (exp.Expression is MemberExpression)
-            {
-                return GetValue((MemberExpression)exp.Expression);
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-        }
-
+        
         public IActionResult Privacy()
         {
             return View();

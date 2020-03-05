@@ -38,27 +38,28 @@ namespace F4ST.Data.RavenDB
         public Task<T> Get<T>(object id, CancellationToken cancellationToken = default)
             where T : BaseEntity
         {
-            return _session.LoadAsync<T>((string)id, cancellationToken);
+            return _session.LoadAsync<T>((string) id, cancellationToken);
         }
 
         public async Task<IEnumerable<T>> Get<T>(IEnumerable<object> ids, CancellationToken cancellationToken = default)
             where T : BaseEntity
         {
-            var res = await _session.LoadAsync<T>((IEnumerable<string>)ids, cancellationToken);
+            var res = await _session.LoadAsync<T>((IEnumerable<string>) ids, cancellationToken);
             return res.Select(t => t.Value);
         }
 
         /// <inheritdoc />
-        public async Task<T> Get<T, TIncType>(object id, Expression<Func<T, string>> field,
+        public async Task<T> Get<T, TIncType>(object id, Expression<Func<T, object>> field,
             Expression<Func<T, TIncType>> targetField, CancellationToken cancellationToken = default)
             where T : BaseEntity
             where TIncType : BaseEntity
         {
             var res = await _session
-                .Include(field)
-                .LoadAsync<T>((string)id, cancellationToken);
+                .Include(field.Cast<T, object, string>())
+                .LoadAsync<T>((string) id, cancellationToken);
 
-            var inc = await _session.LoadAsync<TIncType>(res.GetPropertyValue(field), cancellationToken);
+            var inc = await _session.LoadAsync<TIncType>(res.GetPropertyValue<T, string>(field.Name),
+                cancellationToken);
 
             res.SetPropertyValue(targetField, inc);
 
@@ -94,22 +95,24 @@ namespace F4ST.Data.RavenDB
         }
 
         /// <inheritdoc />
-        public async Task<T> Get<T, TIncType1, TIncType2>(string id, Expression<Func<T, string>> field1,
-            Expression<Func<T, TIncType1>> targetField1, Expression<Func<T, string>> field2,
+        public async Task<T> Get<T, TIncType1, TIncType2>(string id, Expression<Func<T, object>> field1,
+            Expression<Func<T, TIncType1>> targetField1, Expression<Func<T, object>> field2,
             Expression<Func<T, TIncType2>> targetField2, CancellationToken cancellationToken = default)
             where T : BaseEntity
             where TIncType1 : BaseEntity
             where TIncType2 : BaseEntity
         {
             var res = await _session
-                .Include(field1)
-                .Include(field2)
+                .Include(field1.Cast<T, object, string>())
+                .Include(field2.Cast<T, object, string>())
                 .LoadAsync<T>(id, cancellationToken);
 
-            var inc1 = await _session.LoadAsync<TIncType1>(res.GetPropertyValue(field1), cancellationToken);
+            var inc1 = await _session.LoadAsync<TIncType1>(res.GetPropertyValue<T, string>(field1.Name),
+                cancellationToken);
             res.SetPropertyValue(targetField1, inc1);
 
-            var inc2 = await _session.LoadAsync<TIncType2>(res.GetPropertyValue(field2), cancellationToken);
+            var inc2 = await _session.LoadAsync<TIncType2>(res.GetPropertyValue<T, string>(field2.PropertyName()),
+                cancellationToken);
             res.SetPropertyValue(targetField2, inc2);
 
             return res;
@@ -247,34 +250,55 @@ namespace F4ST.Data.RavenDB
         }
 
         /// <inheritdoc />
-        public async Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> order,
+        public Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> order,
             int pageIndex, int size, CancellationToken cancellationToken = default)
             where T : BaseEntity
         {
-            return await Find(filter, order, pageIndex, size, false, cancellationToken);
+            return Find(filter, order, pageIndex, size, false, cancellationToken);
+        }
+
+        public Task<IEnumerable<T>> Find<T, TIncType>(Expression<Func<T, bool>> filter,
+            Expression<Func<T, object>> field, Expression<Func<T, TIncType>> targetField,
+            Expression<Func<T, object>> order, int pageIndex,
+            int size, CancellationToken cancellationToken = default) where T : BaseEntity where TIncType : BaseEntity
+        {
+            return Find(filter,field,targetField, order, pageIndex, size, false, cancellationToken);
         }
 
         /// <inheritdoc />
-        public async Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, int pageIndex, int size, CancellationToken cancellationToken = default)
+        public Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, int pageIndex, int size,
+            CancellationToken cancellationToken = default)
             where T : BaseEntity
         {
-            return await Find(filter, "Id", pageIndex, size, false, cancellationToken);
+            return Find(filter, "Id", pageIndex, size, false, cancellationToken);
+        }
+
+        public Task<IEnumerable<T>> Find<T, TIncType>(Expression<Func<T, bool>> filter,
+            Expression<Func<T, object>> field, Expression<Func<T, TIncType>> targetField, int pageIndex, int size,
+            CancellationToken cancellationToken = default) where T : BaseEntity where TIncType : BaseEntity
+        {
+            return Find(filter, "Id", pageIndex, size, false, cancellationToken);
         }
 
         /// <inheritdoc />
-        public async Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter,
+        public Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter,
             Expression<Func<T, object>> order,
             int pageIndex, int size, bool isDescending, CancellationToken cancellationToken = default)
             where T : BaseEntity
         {
-            var items = _session.Query<T>().Where(filter, true);
-            var oItems = !isDescending
-                ? LinqExtensions.OrderBy(items, order)
-                : LinqExtensions.OrderByDescending(items, order);
-            return await oItems
-                .Skip(pageIndex * size)
-                .Take(size)
-                .ToListAsync(cancellationToken);
+            var orderField = order.Name ?? order.PropertyName();
+            return Find(filter, orderField, pageIndex, size, isDescending, cancellationToken);
+        }
+
+        public Task<IEnumerable<T>> Find<T, TIncType>(Expression<Func<T, bool>> filter,
+            Expression<Func<T, object>> field, Expression<Func<T, TIncType>> targetField,
+            Expression<Func<T, object>> order, int pageIndex,
+            int size, bool isDescending, CancellationToken cancellationToken = default)
+            where T : BaseEntity 
+            where TIncType : BaseEntity
+        {
+            var orderField = order.Name ?? order.PropertyName();
+            return Find(filter,field,targetField, orderField, pageIndex, size, isDescending, cancellationToken);
         }
 
         private async Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter,
@@ -289,6 +313,44 @@ namespace F4ST.Data.RavenDB
                 .Skip(pageIndex * size)
                 .Take(size)
                 .ToListAsync(cancellationToken);
+        }
+        
+        private async Task<IEnumerable<T>> Find<T, TIncType>(Expression<Func<T, bool>> filter,
+            Expression<Func<T, object>> field, Expression<Func<T, TIncType>> targetField,
+            string order, int pageIndex, int size, bool isDescending, CancellationToken cancellationToken = default)
+            where T : BaseEntity
+            where TIncType : BaseEntity
+        {
+            var items = _session
+                .Query<T>().Where(filter, true)
+                .Include(field);
+
+            var oItems = !isDescending
+                ? items.OrderBy(order)
+                : items.OrderByDescending(order);
+
+
+            var res= await oItems
+                .Skip(pageIndex * size)
+                .Take(size)
+                .ToListAsync(cancellationToken);
+
+            var incFieldValues = res.Select(field.Compile()).Cast<string>().ToList();
+
+            var resInc = await _session.LoadAsync<TIncType>(incFieldValues, cancellationToken);
+
+            foreach (var item in res)
+            {
+                var tValue = item.GetPropertyValue<T, string>(field.PropertyName());
+                
+                if(!resInc.ContainsKey(tValue))
+                    continue;
+                
+                var obj = resInc.FirstOrDefault(c => c.Key == tValue).Value;
+                item.SetPropertyValue(targetField, obj);
+            }
+
+            return res;
         }
 
         #endregion
