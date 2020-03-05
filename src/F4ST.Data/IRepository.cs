@@ -33,7 +33,7 @@ namespace F4ST.Data
         /// <param name="targetField">Target field for set related document</param>
         /// <param name="cancellationToken"></param>
         /// <returns>T</returns>
-        public Task<T> Get<T, TIncType>(object id, Expression<Func<T, string>> field,
+        public Task<T> Get<T, TIncType>(object id, Expression<Func<T, object>> field,
             Expression<Func<T, TIncType>> targetField, CancellationToken cancellationToken = default)
             where T : BaseEntity
             where TIncType : BaseEntity;
@@ -51,8 +51,8 @@ namespace F4ST.Data
         /// <param name="targetField2">Target field 2 for set related document</param>
         /// <param name="cancellationToken"></param>
         /// <returns>T</returns>
-        public Task<T> Get<T, TIncType1, TIncType2>(string id, Expression<Func<T, string>> field1,
-            Expression<Func<T, TIncType1>> targetField1, Expression<Func<T, string>> field2,
+        public Task<T> Get<T, TIncType1, TIncType2>(string id, Expression<Func<T, object>> field1,
+            Expression<Func<T, TIncType1>> targetField1, Expression<Func<T, object>> field2,
             Expression<Func<T, TIncType2>> targetField2, CancellationToken cancellationToken = default)
             where T : BaseEntity
             where TIncType1 : BaseEntity
@@ -148,11 +148,32 @@ namespace F4ST.Data
         Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> order, int pageIndex,
             int size, CancellationToken cancellationToken = default) where T : BaseEntity;
 
+        public Task<IEnumerable<T>> Find<T, TIncType>(Expression<Func<T, bool>> filter,
+            Expression<Func<T, object>> field,
+            Expression<Func<T, TIncType>> targetField,
+            Expression<Func<T, object>> order, int pageIndex, int size, CancellationToken cancellationToken = default)
+            where T : BaseEntity
+            where TIncType : BaseEntity;
+
         Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, int pageIndex, int size, CancellationToken cancellationToken = default) where T : BaseEntity;
+
+        public Task<IEnumerable<T>> Find<T, TIncType>(Expression<Func<T, bool>> filter,
+            Expression<Func<T, object>> field,
+            Expression<Func<T, TIncType>> targetField,
+            int pageIndex, int size, CancellationToken cancellationToken = default)
+            where T : BaseEntity
+            where TIncType : BaseEntity;
 
         Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> order, int pageIndex,
             int size, bool isDescending, CancellationToken cancellationToken = default)
             where T : BaseEntity;
+
+        Task<IEnumerable<T>> Find<T, TIncType>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> field,
+            Expression<Func<T, TIncType>> targetField,
+            Expression<Func<T, object>> order, int pageIndex,
+            int size, bool isDescending, CancellationToken cancellationToken = default)
+            where T : BaseEntity
+            where TIncType : BaseEntity;
 
         #endregion
 

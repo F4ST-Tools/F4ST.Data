@@ -1,5 +1,6 @@
 ﻿using F4ST.Data;
 using F4ST.Data.Dapper;
+using Newtonsoft.Json;
 
 namespace Test.Data
 {
@@ -18,5 +19,9 @@ namespace Test.Data
         /// فعال/غیرفعال
         /// </summary>
         public bool? IsActive { get; set; }
+
+        //[IgnoreInsert, IgnoreSelect, IgnoreUpdate]
+        [JsonIgnore]
+        public virtual CountryEntity Country { get; set; }
     }
 }

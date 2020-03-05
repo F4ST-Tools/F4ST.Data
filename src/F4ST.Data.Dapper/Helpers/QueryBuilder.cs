@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using Dapper;
 using Dapper.Contrib.Linq2Dapper.Helpers;
+using F4ST.Common.Extensions;
 
 namespace Dapper.Contrib.Linq2Dapper
 {
@@ -294,12 +296,16 @@ namespace Dapper.Contrib.Linq2Dapper
             // IN (...)
             object ev;
 
-            if (node.Method.DeclaringType == typeof(List<string>))
+
+            var isEnumerable = node.Method.DeclaringType.IsIEnumerable();
+                
+            //if (node.Method.DeclaringType == typeof(List<>))
+            if (isEnumerable)
             {
-                if (
+                /*if (
                     !QueryHelper.IsSpecificMemberExpression(node.Arguments[0], typeof(TData),
                         CacheHelper.TryGetPropertyList<TData>()))
-                    return node;
+                    return node;*/
 
 
                 Visit(node.Arguments[0]);
@@ -321,25 +327,29 @@ namespace Dapper.Contrib.Linq2Dapper
             {
                 return node;
             }
-
+            
             _writer.In();
 
             // Add each string in the collection to the list of locations to obtain data about. 
-            var queryStrings = (IList<object>)ev;
-            var count = queryStrings.Count();
-            _writer.OpenBrace();
-            for (var i = 0; i < count; i++)
+            if (isEnumerable)
             {
-                _writer.Parameter(queryStrings.ElementAt(i));
+                var queryStrings = (ev as IEnumerable).ToIEnumerable<object>();
+                var count = queryStrings.Count();
+                _writer.OpenBrace();
+                for (var i = 0; i < count; i++)
+                {
+                    _writer.Parameter(queryStrings.ElementAt(i));
 
-                if (i + 1 < count)
-                    _writer.Delimiter();
+                    if (i + 1 < count)
+                        _writer.Delimiter();
+                }
             }
+
             _writer.CloseBrace();
 
             return node;
         }
-
+        
         #endregion
         //--------------------------------------------------------------------------------------------------------------------------------------------------
     }

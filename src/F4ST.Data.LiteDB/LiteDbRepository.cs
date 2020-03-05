@@ -28,7 +28,6 @@ namespace F4ST.Data.LiteDB
 
         public async Task SaveChanges()
         {
-
         }
 
         private string ResolveTableName<T>()
@@ -36,7 +35,8 @@ namespace F4ST.Data.LiteDB
             var type = typeof(T);
             var tableName = type.Name;
 
-            var tableAttr = type.GetCustomAttributes(true).SingleOrDefault(attr => attr.GetType().Name == typeof(TableAttribute).Name) as dynamic;
+            var tableAttr = type.GetCustomAttributes(true)
+                .SingleOrDefault(attr => attr.GetType().Name == typeof(TableAttribute).Name) as dynamic;
             if (tableAttr != null)
             {
                 tableName = tableAttr.Name;
@@ -57,11 +57,12 @@ namespace F4ST.Data.LiteDB
         public async Task<T> Get<T>(object id, CancellationToken cancellationToken = default) where T : BaseEntity
         {
             var col = GetCollection<T>();
-            return col.FindOne(Query.EQ("Id", (BsonValue)id));
+            return col.FindOne(Query.EQ("Id", (BsonValue) id));
         }
 
         /// <inheritdoc />
-        public async Task<IEnumerable<T>> Get<T>(IEnumerable<object> ids, CancellationToken cancellationToken = default) where T : BaseEntity
+        public async Task<IEnumerable<T>> Get<T>(IEnumerable<object> ids, CancellationToken cancellationToken = default)
+            where T : BaseEntity
         {
             var res = new List<T>();
             foreach (var id in ids)
@@ -73,7 +74,8 @@ namespace F4ST.Data.LiteDB
         }
 
         /// <inheritdoc />
-        public async Task<T> Get<T, TIncType>(object id, Expression<Func<T, string>> field, Expression<Func<T, TIncType>> targetField,
+        public async Task<T> Get<T, TIncType>(object id, Expression<Func<T, object>> field,
+            Expression<Func<T, TIncType>> targetField,
             CancellationToken cancellationToken = default) where T : BaseEntity where TIncType : BaseEntity
         {
             var res = await Get<T>(id, cancellationToken);
@@ -89,8 +91,10 @@ namespace F4ST.Data.LiteDB
         }
 
         /// <inheritdoc />
-        public async Task<T> Get<T, TIncType1, TIncType2>(string id, Expression<Func<T, string>> field1, Expression<Func<T, TIncType1>> targetField1, Expression<Func<T, string>> field2,
-            Expression<Func<T, TIncType2>> targetField2, CancellationToken cancellationToken = default) where T : BaseEntity where TIncType1 : BaseEntity where TIncType2 : BaseEntity
+        public async Task<T> Get<T, TIncType1, TIncType2>(string id, Expression<Func<T, object>> field1,
+            Expression<Func<T, TIncType1>> targetField1, Expression<Func<T, object>> field2,
+            Expression<Func<T, TIncType2>> targetField2, CancellationToken cancellationToken = default)
+            where T : BaseEntity where TIncType1 : BaseEntity where TIncType2 : BaseEntity
         {
             var res = await Get<T>(id, cancellationToken);
 
@@ -142,11 +146,13 @@ namespace F4ST.Data.LiteDB
             {
                 item.ModifiedOn = DateTime.Now;
             }
+
             col.Update(dbEntities);
         }
 
         /// <inheritdoc />
-        public Task Update<T, TField>(T entity, Expression<Func<T, TField>> field, TField value, CancellationToken cancellationToken = default) where T : BaseEntity
+        public Task Update<T, TField>(T entity, Expression<Func<T, TField>> field, TField value,
+            CancellationToken cancellationToken = default) where T : BaseEntity
         {
             entity.SetPropertyValue(field, value);
             return Update(entity, cancellationToken);
@@ -176,7 +182,7 @@ namespace F4ST.Data.LiteDB
             var col = GetCollection<T>();
             //todo: must check
             Debugger.Break();
-            col.DeleteMany(Query.EQ("Id", (BsonValue)id));
+            col.DeleteMany(Query.EQ("Id", (BsonValue) id));
         }
 
         /// <inheritdoc />
@@ -192,7 +198,8 @@ namespace F4ST.Data.LiteDB
         }
 
         /// <inheritdoc />
-        public async Task Delete<T>(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default) where T : BaseEntity
+        public async Task Delete<T>(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
+            where T : BaseEntity
         {
             var col = GetCollection<T>();
             col.DeleteMany(filter);
@@ -210,28 +217,47 @@ namespace F4ST.Data.LiteDB
         #region Find
 
         /// <inheritdoc />
-        public async Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default) where T : BaseEntity
+        public async Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter,
+            CancellationToken cancellationToken = default) where T : BaseEntity
         {
             var col = GetCollection<T>();
             return col.Find(filter);
         }
 
         /// <inheritdoc />
-        public Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> order, int pageIndex, int size,
+        public Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> order,
+            int pageIndex, int size,
             CancellationToken cancellationToken = default) where T : BaseEntity
         {
             return Find(filter, order, pageIndex, size, cancellationToken);
         }
 
+        public Task<IEnumerable<T>> Find<T, TIncType>(Expression<Func<T, bool>> filter,
+            Expression<Func<T, object>> field, Expression<Func<T, TIncType>> targetField,
+            Expression<Func<T, object>> order, int pageIndex,
+            int size, CancellationToken cancellationToken = default) where T : BaseEntity where TIncType : BaseEntity
+        {
+            return Find(filter, field, targetField, order, pageIndex, size, false, cancellationToken);
+        }
+
         /// <inheritdoc />
-        public async Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, int pageIndex, int size, CancellationToken cancellationToken = default) where T : BaseEntity
+        public async Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, int pageIndex, int size,
+            CancellationToken cancellationToken = default) where T : BaseEntity
         {
             var col = GetCollection<T>();
             return col.Find(filter, pageIndex * size, size);
         }
 
+        public Task<IEnumerable<T>> Find<T, TIncType>(Expression<Func<T, bool>> filter,
+            Expression<Func<T, object>> field, Expression<Func<T, TIncType>> targetField, int pageIndex, int size,
+            CancellationToken cancellationToken = default) where T : BaseEntity where TIncType : BaseEntity
+        {
+            return Find(filter, field, targetField, e => e.CreateOn, pageIndex, size, false, cancellationToken);
+        }
+
         /// <inheritdoc />
-        public async Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> order, int pageIndex, int size, bool isDescending,
+        public async Task<IEnumerable<T>> Find<T>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> order,
+            int pageIndex, int size, bool isDescending,
             CancellationToken cancellationToken = default) where T : BaseEntity
         {
             var col = GetCollection<T>();
@@ -243,8 +269,36 @@ namespace F4ST.Data.LiteDB
                 .Where(filter.Compile())
                 .Skip(pageIndex * size)
                 .Take(size);
+        }
 
-            //return col.Find(filter, pageIndex * size, size);
+        public async Task<IEnumerable<T>> Find<T, TIncType>(Expression<Func<T, bool>> filter,
+            Expression<Func<T, object>> field,
+            Expression<Func<T, TIncType>> targetField, Expression<Func<T, object>> order, int pageIndex,
+            int size, bool isDescending, CancellationToken cancellationToken = default)
+            where T : BaseEntity where TIncType : BaseEntity
+        {
+            var col = GetCollection<T>();
+            var items = !isDescending
+                ? col.FindAll().OrderBy(order.Compile())
+                : col.FindAll().OrderByDescending(order.Compile());
+
+            var res = items
+                .Where(filter.Compile())
+                .Skip(pageIndex * size)
+                .Take(size);
+
+            var incFieldValues = res.Select(field.Compile()).ToList();
+
+            var resInc = await Get<TIncType>(incFieldValues, cancellationToken);
+
+            foreach (var item in res)
+            {
+                var tValue = item.GetPropertyValue<T, int>(field.PropertyName());
+                var obj = resInc.FirstOrDefault(c => c.GetPropertyValue<TIncType, int>("Id") == tValue);
+                item.SetPropertyValue(targetField, obj);
+            }
+
+            return res;
         }
 
         #endregion
@@ -259,7 +313,8 @@ namespace F4ST.Data.LiteDB
         }
 
         /// <inheritdoc />
-        public async Task<long> Count<T>(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default) where T : BaseEntity
+        public async Task<long> Count<T>(Expression<Func<T, bool>> filter,
+            CancellationToken cancellationToken = default) where T : BaseEntity
         {
             var col = GetCollection<T>();
             return col.LongCount(filter);
@@ -272,7 +327,8 @@ namespace F4ST.Data.LiteDB
         }
 
         /// <inheritdoc />
-        public async Task<bool> Any<T>(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default) where T : BaseEntity
+        public async Task<bool> Any<T>(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
+            where T : BaseEntity
         {
             return await Count(filter, cancellationToken) > 0;
         }
@@ -282,7 +338,8 @@ namespace F4ST.Data.LiteDB
         #region Max/Min
 
         /// <inheritdoc />
-        public Task<T> Max<T>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> field, CancellationToken cancellationToken = default) where T : BaseEntity
+        public Task<T> Max<T>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> field,
+            CancellationToken cancellationToken = default) where T : BaseEntity
         {
             throw new NotImplementedException();
         }
@@ -294,13 +351,15 @@ namespace F4ST.Data.LiteDB
         }
 
         /// <inheritdoc />
-        public Task<T> Min<T>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> field, CancellationToken cancellationToken = default) where T : BaseEntity
+        public Task<T> Min<T>(Expression<Func<T, bool>> filter, Expression<Func<T, object>> field,
+            CancellationToken cancellationToken = default) where T : BaseEntity
         {
             throw new NotImplementedException();
         }
 
         /// <inheritdoc />
-        public Task<T> Min<T>(Expression<Func<T, object>> field, CancellationToken cancellationToken = default) where T : BaseEntity
+        public Task<T> Min<T>(Expression<Func<T, object>> field, CancellationToken cancellationToken = default)
+            where T : BaseEntity
         {
             throw new NotImplementedException();
         }

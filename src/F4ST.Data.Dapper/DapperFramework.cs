@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text;
 using Dapper;
 using Microsoft.CSharp.RuntimeBinder;
+using Newtonsoft.Json;
 
 namespace F4ST.Data.Dapper
 {
@@ -790,7 +791,11 @@ namespace F4ST.Data.Dapper
                 {
                     var property = propertyInfos.ElementAt(i);
 
-                    if (property.GetCustomAttributes(true).Any(attr => attr.GetType().Name == typeof(IgnoreSelectAttribute).Name || attr.GetType().Name == typeof(NotMappedAttribute).Name)) continue;
+                    if (property.GetCustomAttributes(true).Any(
+                        attr => attr.GetType().Name == typeof(IgnoreSelectAttribute).Name ||
+                                attr.GetType().Name == typeof(JsonIgnoreAttribute).Name ||
+                                attr.GetType().Name == typeof(NotMappedAttribute).Name)) 
+                        continue;
 
                     if (addedAny)
                         sb.Append(",");
@@ -858,6 +863,7 @@ namespace F4ST.Data.Dapper
                         continue;
                     if (property.GetCustomAttributes(true).Any(attr =>
                         attr.GetType().Name == typeof(IgnoreInsertAttribute).Name ||
+                        attr.GetType().Name == typeof(JsonIgnoreAttribute).Name ||
                         attr.GetType().Name == typeof(NotMappedAttribute).Name ||
                         attr.GetType().Name == typeof(ReadOnlyAttribute).Name && IsReadOnly(property))
                     ) continue;
@@ -894,6 +900,7 @@ namespace F4ST.Data.Dapper
                         continue;
                     if (property.GetCustomAttributes(true).Any(attr =>
                         attr.GetType().Name == typeof(IgnoreInsertAttribute).Name ||
+                        attr.GetType().Name == typeof(JsonIgnoreAttribute).Name ||
                         attr.GetType().Name == typeof(NotMappedAttribute).Name ||
                         attr.GetType().Name == typeof(ReadOnlyAttribute).Name && IsReadOnly(property))) continue;
 
@@ -977,7 +984,11 @@ namespace F4ST.Data.Dapper
             //remove ones that are readonly
             updateableProperties = updateableProperties.Where(p => p.GetCustomAttributes(true).Any(attr => (attr.GetType().Name == typeof(ReadOnlyAttribute).Name) && IsReadOnly(p)) == false);
             //remove ones with IgnoreUpdate attribute
-            updateableProperties = updateableProperties.Where(p => p.GetCustomAttributes(true).Any(attr => attr.GetType().Name == typeof(IgnoreUpdateAttribute).Name) == false);
+            updateableProperties = updateableProperties.Where(p => p.GetCustomAttributes(true)
+                .Any(attr => 
+                    attr.GetType().Name == typeof(IgnoreUpdateAttribute).Name ||
+                    attr.GetType().Name == typeof(JsonIgnoreAttribute).Name 
+                ) == false);
             //remove ones that are not mapped
             updateableProperties = updateableProperties.Where(p => p.GetCustomAttributes(true).Any(attr => attr.GetType().Name == typeof(NotMappedAttribute).Name) == false);
 
