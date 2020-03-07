@@ -27,7 +27,7 @@ namespace F4ST.Data
             var providers = Globals.GetImplementedInterfaceOf<IDbProvider>().ToArray();
 
             var conf = IoC.Resolve<IConfiguration>();
-            var configs = conf.GetSection("DbConnection").GetChildren();
+            var configs = conf.GetSection("DbConnection")?.GetChildren();
 
             foreach (var config in configs ?? new List<IConfigurationSection>())
             {
