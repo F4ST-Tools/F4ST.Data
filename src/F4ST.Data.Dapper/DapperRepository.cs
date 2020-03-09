@@ -362,6 +362,9 @@ namespace F4ST.Data.Dapper
         {
             var res = await Find<T>(filter, order, pageIndex, size, isDescending, cancellationToken);
 
+            if (res==null || !res.Any())
+                return res;
+
             var incFieldValues = res.Select(field.Compile()).ToList();
 
             var tran = new QueryBuilder<T>();
