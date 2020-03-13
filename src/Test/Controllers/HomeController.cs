@@ -32,22 +32,23 @@ namespace Test.Controllers
                 //var count = await rep.Count<TestEntity>();
 
                 //if (count == 0)
-                /*{
+                {
                     var item = new TestEntity()
                     {
-                        Name = "test",
-                        Family = "test"
+                        BankTitle = "bank 1",
+                        CountryId = 1,
+                        IsActive = true
                     };
 
                     await rep.Add(item);
                     await rep.SaveChanges();
 
-                    item.Family = "test 2";
+                    /*item.Family = "test 2";
                     await rep.Update(item);
-                    await rep.SaveChanges();
+                    await rep.SaveChanges();*/
                 }
                 
-                var items = await rep.Find<TestEntity>(t => t.Name == "test");*/
+                //var items = await rep.Find<TestEntity>(t => t.Name == "test");*/
                 //var aa = 3;
 
                 //var bb = "asd";

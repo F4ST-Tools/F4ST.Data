@@ -166,9 +166,10 @@ namespace F4ST.Data.Dapper
         #region Insert
 
         /// <inheritdoc />
-        public Task Add<T>(T entity, CancellationToken cancellationToken = default) where T : BaseEntity
+        public async Task Add<T>(T entity, CancellationToken cancellationToken = default) where T : BaseEntity
         {
-            return _dapper.InsertAsync(_connection, entity, _transaction, Timeout, cancellationToken);
+            var id=await _dapper.InsertAsync(_connection, entity, _transaction, Timeout, cancellationToken);
+            ObjectExt.SetPropertyValue(entity, "Id", id);
         }
 
         /// <inheritdoc />
@@ -216,7 +217,6 @@ namespace F4ST.Data.Dapper
             var tran = new QueryBuilder<T>();
             tran.Evaluate(filter);
             var where = tran.Sql;
-            Debugger.Break();
 
             var items = await _dapper.GetListAsync<T>(_connection, where, tran.Parameters, _transaction, Timeout, cancellationToken);
             var dbItems = items as T[] ?? items.ToArray();
@@ -254,7 +254,6 @@ namespace F4ST.Data.Dapper
             var tran = new QueryBuilder<T>();
             tran.Evaluate(filter);
             var where = tran.Sql;
-            Debugger.Break();
 
             return _dapper.DeleteListAsync<T>(_connection, where, tran.Parameters, _transaction, Timeout, cancellationToken);
         }
@@ -402,8 +401,6 @@ namespace F4ST.Data.Dapper
             var tran = new QueryBuilder<T>();
             tran.Evaluate(filter);
             var where = tran.Sql;
-
-            Debugger.Break();
 
             return await _dapper.RecordCountAsync<T>(_connection, where, tran.Parameters, _transaction, Timeout, cancellationToken);
         }
