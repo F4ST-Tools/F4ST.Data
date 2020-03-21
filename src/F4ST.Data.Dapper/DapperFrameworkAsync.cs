@@ -594,16 +594,17 @@ namespace F4ST.Data.Dapper
             return connection.ExecuteScalarAsync<int>(sb.ToString(), whereConditions, transaction, commandTimeout);
         }
 
+        #region Execute
         public async Task<IEnumerable<T>> ExecuteListAsync<T>(IDbConnection connection,
             string procedureName, object parameters, IDbTransaction transaction = null, int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
-            var currenttype = typeof(T);
+            var currentType = typeof(T);
 
-            var paramprops = GetAllProperties(parameters).ToArray();
+            var paramProps = GetAllProperties(parameters).ToArray();
 
             if (Debugger.IsAttached)
-                Trace.WriteLine($"ExecuteListAsync<{procedureName}>: {currenttype} {paramprops}");
+                Trace.WriteLine($"ExecuteListAsync<{procedureName}>: {currentType} {paramProps}");
 
             return await connection.QueryAsync<T>(new CommandDefinition(procedureName, parameters, transaction,
                 commandTimeout,
@@ -614,12 +615,12 @@ namespace F4ST.Data.Dapper
             object parameters, IDbTransaction transaction = null, int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
-            var currenttype = typeof(T);
+            var currentType = typeof(T);
 
-            var paramprops = GetAllProperties(parameters).ToArray();
+            var paramProps = GetAllProperties(parameters).ToArray();
 
             if (Debugger.IsAttached)
-                Trace.WriteLine($"ExecuteAsync<{procedureName}>: {currenttype} {paramprops}");
+                Trace.WriteLine($"ExecuteAsync<{procedureName}>: {currentType} {paramProps}");
 
             return await connection.QueryFirstOrDefaultAsync<T>(new CommandDefinition(procedureName, parameters,
                 transaction, commandTimeout,
@@ -633,10 +634,10 @@ namespace F4ST.Data.Dapper
             object parameters, IDbTransaction transaction = null, int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
-            var paramprops = GetAllProperties(parameters).ToArray();
+            var paramProps = GetAllProperties(parameters).ToArray();
 
             if (Debugger.IsAttached)
-                Trace.WriteLine($"ExecuteScalar<{procedureName}>: {paramprops}");
+                Trace.WriteLine($"ExecuteScalar<{procedureName}>: {paramProps}");
 
             return await connection.ExecuteScalarAsync<int>(new CommandDefinition(procedureName, parameters,
                 transaction, commandTimeout, CommandType.StoredProcedure, cancellationToken: cancellationToken));
@@ -647,10 +648,10 @@ namespace F4ST.Data.Dapper
             object parameters, IDbTransaction transaction = null, int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
-            var paramprops = GetAllProperties(parameters).ToArray();
+            var paramProps = GetAllProperties(parameters).ToArray();
 
             if (Debugger.IsAttached)
-                Trace.WriteLine($"ExecuteAsync<{procedureName}>: {paramprops}");
+                Trace.WriteLine($"ExecuteAsync<{procedureName}>: {paramProps}");
 
             await connection.ExecuteAsync(new CommandDefinition(procedureName, parameters, transaction, commandTimeout,
                 CommandType.StoredProcedure, cancellationToken: cancellationToken));
@@ -661,12 +662,12 @@ namespace F4ST.Data.Dapper
             int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
-            var currenttype = typeof(T);
-            var idProps = GetIdProperties(currenttype).ToList();
+            var currentType = typeof(T);
+            var idProps = GetIdProperties(currentType).ToList();
             if (!idProps.Any())
                 throw new ArgumentException("Entity must have at least one [Key] property");
 
-            var name = GetTableName(currenttype);
+            var name = GetTableName(currentType);
 
             var sb = new StringBuilder();
             var whereprops = GetAllProperties(whereConditions).ToArray();
@@ -682,16 +683,14 @@ namespace F4ST.Data.Dapper
             }
 
             if (Debugger.IsAttached)
-                Trace.WriteLine($"GetList<{currenttype}>: {sb}");
+                Trace.WriteLine($"GetList<{currentType}>: {sb}");
 
             return await connection.QueryAsync<T>(new CommandDefinition(sb.ToString(), whereConditions, transaction,
                 commandTimeout,
                 CommandType.Text, cancellationToken: cancellationToken));
         }
 
-        /// <summary>
-        /// Database server dialects
-        /// </summary>
 
+        #endregion
     }
 }
