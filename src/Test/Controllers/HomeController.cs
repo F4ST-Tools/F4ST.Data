@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using F4ST.Common.Containers;
 using F4ST.Data;
+using F4ST.Data.Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Test.Data;
@@ -27,10 +28,10 @@ namespace Test.Controllers
 
         public async Task<IActionResult> Index()
         {
-            using (var rep = _provider.GetRepository("DB"))
+            using (var rep = (DapperRepository)_provider.GetRepository("DB"))
             {
                 //var count = await rep.Count<TestEntity>();
-
+                
                 //if (count == 0)
                 {
                     var item = new TestEntity()
