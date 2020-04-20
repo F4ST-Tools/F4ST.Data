@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using F4ST.Common.Extensions;
 using F4ST.Common.Mappers;
 using Raven.Client.Documents;
+using Raven.Client.Documents.Conventions;
 using Raven.Client.Documents.Session;
 
 namespace F4ST.Data.RavenDB
@@ -20,6 +21,7 @@ namespace F4ST.Data.RavenDB
         {
             _dbConnection = new RavenDbConnection(config);
             _session = _dbConnection.Connection.OpenAsyncSession();
+
         }
 
         public void Dispose()
